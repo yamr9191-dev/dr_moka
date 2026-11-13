@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#10091F" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="MALAK ♡" />
-  <title>MALAK – Smart Study & Life Companion</title>
+  <meta name="apple-mobile-web-app-title" content="My Planner" />
+  <title>My Planner – Personal Organizer</title>
 
   <!-- PWA Manifest & Icons -->
   <link rel="manifest" href="./manifest.json" />
@@ -885,8 +885,8 @@
   <!-- Splash Screen -->
   <div id="splash-screen">
     <div class="splash-crown">👑</div>
-    <div class="splash-title">MALAK</div>
-    <div class="splash-sub">Every Small Step Takes You Closer to Your Dream ♡</div>
+    <div class="splash-title">My Planner</div>
+    <div class="splash-sub">خطّط ليومك بالطريقة التي تناسبك</div>
   </div>
 
   <!-- SVG Gradients -->
@@ -899,6 +899,24 @@
       </linearGradient>
     </defs>
   </svg>
+
+  <div id="first-setup" class="modal-backdrop open" style="z-index:10000;align-items:center;padding:16px;">
+    <div class="modal-sheet" style="border-radius:26px;max-height:90vh;">
+      <div class="section-title"><span>👋 أهلاً بك</span></div>
+      <p style="font-size:.86rem;color:var(--text-muted);line-height:1.7;margin-bottom:14px">خلّينا نجهّز التطبيق على حسب احتياجاتك. تقدر تعدّل كل البيانات لاحقاً.</p>
+      <div class="form-group"><label class="form-label">اسمك</label><input id="setup-name" class="form-control" placeholder="اكتب اسمك"></div>
+      <div class="form-group"><label class="form-label">ما الهدف الذي تريد التركيز عليه؟</label><input id="setup-goal" class="form-control" placeholder="مثلاً: تنظيم الدراسة أو العمل أو الحياة اليومية"></div>
+      <div style="border-top:1px solid var(--border-glass);padding-top:12px;margin-top:8px">
+        <div style="font-weight:700;margin-bottom:8px">📅 أول موعد في جدولك (اختياري)</div>
+        <div class="form-group"><label class="form-label">اسم الدرس / النشاط</label><input id="setup-lesson" class="form-control" placeholder="اسم المادة أو النشاط"></div>
+        <div class="grid-2" style="margin-bottom:0">
+          <div class="form-group"><label class="form-label">التاريخ</label><input id="setup-date" type="date" class="form-control"></div>
+          <div class="form-group"><label class="form-label">الوقت</label><input id="setup-time" type="time" class="form-control"></div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="completeFirstSetup()">حفظ وبدء الاستخدام</button>
+    </div>
+  </div>
 
   <div class="app-shell">
 
@@ -929,13 +947,13 @@
             </div>
           </div>
           <div class="hero-info">
-            <div class="hero-name">ملك <span class="heart">♡</span></div>
-            <div class="hero-sub">طالبة تالتة ثانوي • <span id="today-date-str"></span></div>
+            <div class="hero-name"><span id="profile-name-display">مرحباً بك</span></div>
+            <div class="hero-sub"><span id="profile-goal-display">مساحتك لتنظيم يومك</span> • <span id="today-date-str"></span></div>
           </div>
           <button class="icon-btn" onclick="switchTab('more')" title="الإعدادات والمزيد">⚙️</button>
         </div>
         <div class="hero-quote" id="daily-quote-box">
-          "أنتِ قادرة على تحقيق حلمك في كلية العلاج الطبيعي ♡"
+          "ابدأ بخطوة صغيرة، ونظّم يومك بالطريقة التي تناسبك."
         </div>
       </div>
 
@@ -952,10 +970,9 @@
           </div>
         </div>
         <div class="goals-list">
-          <div class="goals-title">🎯 أهدافي نحو الحلم</div>
-          <div class="goal-item"><span class="goal-dot">✓</span> الاستعداد لامتحانات الثانوية</div>
-          <div class="goal-item"><span class="goal-dot">✓</span> تقوية المواد العلمية واللغات</div>
-          <div class="goal-item"><span class="goal-dot">♡</span> <strong style="color:var(--gold)">الالتحاق بكلية العلاج الطبيعي</strong></div>
+          <div class="goals-title">🎯 هدفي</div>
+          <div class="goal-item"><span class="goal-dot">✓</span> <span id="dashboard-goal">أضف هدفك من الإعدادات</span></div>
+          <div class="goal-item"><span class="goal-dot">♡</span> خطط، تابع تقدمك، وعدّل أهدافك في أي وقت.</div>
         </div>
       </div>
 
@@ -985,7 +1002,7 @@
         <div class="glass-card" style="padding: 13px;">
           <div class="card-hdr">
             <span class="card-hdr-title">📅 الدروس القادمة</span>
-            <span style="font-size:0.75rem; color:var(--purple-main); cursor:pointer;" onclick="openModal('lesson-modal')">+ إضافة</span>
+            <span style="font-size:0.75rem; color:var(--purple-main); cursor:pointer;" onclick="openLessonModal()">+ إضافة</span>
           </div>
           <div id="dash-lessons-list"></div>
         </div>
@@ -1032,23 +1049,17 @@
             <span class="card-hdr-title" style="font-size:0.82rem;">📊 تحليل الأداء</span>
           </div>
           <div style="display:flex; align-items:center; justify-content:space-between;">
-            <div class="bar-chart-mini" style="flex:1; margin-left:10px;" id="mini-bars">
-              <div class="bar-col" style="height:45%"></div>
-              <div class="bar-col" style="height:68%"></div>
-              <div class="bar-col" style="height:55%"></div>
-              <div class="bar-col" style="height:82%"></div>
-              <div class="bar-col" style="height:92%"></div>
-            </div>
+            <div class="bar-chart-mini" style="flex:1; margin-left:10px;" id="mini-bars" aria-label="آخر خمس نتائج اختبار"></div>
             <div style="text-align:center;">
               <div id="weekly-score-val" style="font-size:1.15rem; font-weight:800; color:var(--mint);">85%</div>
-              <div style="font-size:0.65rem; color:var(--text-muted);">مستوى الأسبوع</div>
+              <div style="font-size:0.65rem; color:var(--text-muted);">متوسط آخر 7 أيام</div>
             </div>
           </div>
         </div>
 
         <div class="glass-card advice-box" style="padding: 13px;">
           <div class="card-hdr" style="margin-bottom:4px;">
-            <span class="card-hdr-title" style="font-size:0.82rem;">💡 نصيحة لكِ</span>
+            <span class="card-hdr-title" style="font-size:0.82rem;">💡 تذكير يومي</span>
           </div>
           <p class="advice-text" id="smart-tip-text">
             حاولي أخذ قسط كافٍ من النوم، فتركيزك أفضل وأداؤك أعلى ♡
@@ -1070,6 +1081,18 @@
         <p id="weakness-analysis-text" style="font-size:0.85rem; line-height:1.55; color:var(--text-main);"></p>
       </div>
 
+      <!-- Performance summary -->
+      <div class="grid-2" style="margin-bottom:14px;">
+        <div class="glass-card" style="padding:13px; text-align:center;">
+          <div style="font-size:.72rem;color:var(--text-muted);">متوسط آخر 7 أيام</div>
+          <div id="analytics-weekly-score-val" style="font-size:1.35rem;font-weight:800;color:var(--mint);">—</div>
+        </div>
+        <div class="glass-card" style="padding:13px; text-align:center;">
+          <div style="font-size:.72rem;color:var(--text-muted);">عدد الاختبارات المسجلة</div>
+          <div id="grades-count-val" style="font-size:1.35rem;font-weight:800;color:var(--gold);">0</div>
+        </div>
+      </div>
+
       <!-- Subject Grades -->
       <div class="glass-card" style="margin-bottom:14px;">
         <div class="card-hdr">
@@ -1077,6 +1100,11 @@
           <span id="overall-avg-badge" style="color:var(--gold); font-weight:800;">0%</span>
         </div>
         <div id="subjects-bars-list"></div>
+      </div>
+
+      <div class="glass-card" style="margin-bottom:14px;">
+        <div class="card-hdr"><span>🧾 سجل الاختبارات والدرجات</span></div>
+        <div id="grades-history-list"></div>
       </div>
 
       <!-- Upcoming Exams -->
@@ -1095,7 +1123,7 @@
           <button class="btn-outline" style="padding:4px 10px; font-size:0.75rem;" onclick="openModal('mistake-modal')">+ تسجيل خطأ</button>
         </div>
         <p style="font-size:0.76rem; color:var(--text-muted); margin-bottom:10px;">
-          كل سؤال بتغلطي فيه النهارده هو درجة مضمونة في امتحان آخر السنة ♡
+          سجّل الأخطاء والملاحظات المهمة للرجوع إليها لاحقاً.
         </p>
         <div id="mistakes-list"></div>
       </div>
@@ -1104,7 +1132,7 @@
     <!-- ==================== PAGE 3: REWARDS & DREAM TRACKER ==================== -->
     <section id="page-rewards" class="page-section">
       <div class="section-title">
-        <span>🏆 المكافآت وحلم العلاج الطبيعي</span>
+        <span>🏆 المكافآت والإنجازات</span>
       </div>
 
       <!-- Dream Tracker Card -->
@@ -1112,7 +1140,7 @@
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
           <div>
             <div style="font-size:0.78rem; color:var(--gold);">الهدف الأسمى</div>
-            <div style="font-size:1.15rem; font-weight:800;">كلية العلاج الطبيعي 🩺♡</div>
+            <div style="font-size:1.15rem; font-weight:800;" id="dream-goal-display">هدفي الشخصي</div>
           </div>
           <button class="btn-outline" style="font-size:0.75rem;" onclick="openModal('dream-modal')">تعديل</button>
         </div>
@@ -1120,7 +1148,7 @@
         <div style="display:flex; gap:10px; margin-bottom:12px;">
           <div style="flex:1; background:rgba(16,9,31,0.6); padding:10px; border-radius:14px; text-align:center;">
             <div id="dream-days-left" style="font-size:1.4rem; font-weight:800; color:var(--pink);">--</div>
-            <div style="font-size:0.72rem; color:var(--text-muted);">يوم متبقي على الامتحانات</div>
+            <div style="font-size:0.72rem; color:var(--text-muted);">يوم متبقي على الموعد</div>
           </div>
           <div style="flex:1; background:rgba(16,9,31,0.6); padding:10px; border-radius:14px; text-align:center;">
             <div id="total-points-display" style="font-size:1.4rem; font-weight:800; color:var(--gold);">0</div>
@@ -1129,7 +1157,7 @@
         </div>
 
         <div style="background:rgba(255,255,255,0.05); padding:10px 12px; border-radius:12px; font-size:0.84rem; line-height:1.5; color:var(--text-main);">
-          💌 <strong>رسالتكِ للمستقبل:</strong> <span id="dream-letter-text">أهلاً دكتورة ملك.. فخورة بكل ساعة تعب ومذاكرة وصلتني لمكاني النهارده!</span>
+          💌 <strong>رسالتك للمستقبل:</strong> <span id="dream-letter-text">كل خطوة صغيرة تقرّبني من هدفي.</span>
         </div>
       </div>
 
@@ -1178,12 +1206,7 @@
 
         <div class="form-group" style="max-width:260px; margin:0 auto 12px;">
           <select id="pomo-subject" class="form-control" style="text-align:center;">
-            <option value="أحياء">🧬 أحياء</option>
-            <option value="كيمياء">⚗️ كيمياء</option>
-            <option value="فيزياء">⚡ فيزياء</option>
-            <option value="لغة عربية">📖 لغة عربية</option>
-            <option value="لغة إنجليزية">🌍 لغة إنجليزية</option>
-            <option value="جيولوجيا">🪨 جيولوجيا</option>
+            <option value="عام">عام</option>
           </select>
         </div>
 
@@ -1205,40 +1228,20 @@
     <!-- ==================== PAGE 5: MORE (AI ASSISTANT, LESSONS, BACKUP) ==================== -->
     <section id="page-more" class="page-section">
       <div class="section-title">
-        <span>✨ المساعد الذكي والإدارة</span>
+        <span>✨ الإدارة والتنظيم</span>
       </div>
 
-      <!-- Local Smart AI Assistant -->
+      <!-- Personal profile settings -->
       <div class="glass-card" style="margin-bottom:14px;">
-        <div class="card-hdr">
-          <span>🧠 مساعد ملك الذكي</span>
-          <span style="font-size:0.7rem; color:var(--mint);">يعمل بدون إنترنت ⚡</span>
-        </div>
-
-        <div class="chips-row">
-          <button class="chip" onclick="askQuickAI('أبدأ بإيه النهارده؟')">أبدأ بإيه النهارده؟</button>
-          <button class="chip" onclick="askQuickAI('إيه المادة اللي محتاجة تركيز؟')">المادة الأضعف؟</button>
-          <button class="chip" onclick="askQuickAI('اعمل لي خطة مذاكرة سريعة')">خطة سريعة</button>
-          <button class="chip" onclick="askQuickAI('شجعني بكلمة حلوة')">رسالة تشجيع ♡</button>
-        </div>
-
-        <div class="chat-box" id="ai-chat-box">
-          <div class="msg msg-ai">
-            أهلاً يا دكتورة ملك ♡ أنا مساعدك الشخصي! اسأليني عن ترتيب مهامك النهارده، أو تحليل درجاتك، أو خطة لمذاكرة المواد المتراكمة.
-          </div>
-        </div>
-
-        <div style="display:flex; gap:8px;">
-          <input type="text" id="ai-input" class="form-control" placeholder="اكتبي سؤالك هنا... مثلاً: عندي كيمياء وفيزياء أبدأ بإيه؟" onkeypress="if(event.key==='Enter') sendAIMessage()">
-          <button class="add-pill-btn" style="border-radius:13px; padding:0 16px;" onclick="sendAIMessage()">إرسال</button>
-        </div>
+        <div class="card-hdr"><span>👤 بياناتك الشخصية</span><button class="btn-outline" onclick="openProfileSetup(true)">تعديل</button></div>
+        <div style="font-size:0.82rem;color:var(--text-muted);line-height:1.7;">يمكنك تعديل اسمك وهدفك ومواعيدك في أي وقت. تُحفظ البيانات على هذا الجهاز.</div>
       </div>
 
       <!-- Full Lessons Schedule Management -->
       <div class="glass-card" style="margin-bottom:14px;">
         <div class="card-hdr">
           <span>📅 جدول الدروس الكامل</span>
-          <button class="add-pill-btn" onclick="openModal('lesson-modal')">+ درس جديد</button>
+          <button class="add-pill-btn" onclick="openLessonModal()">+ درس جديد</button>
         </div>
         <div id="full-lessons-list"></div>
       </div>
@@ -1300,19 +1303,16 @@
       <input type="hidden" id="edit-task-id">
       <div class="form-group">
         <label class="form-label">اسم المهمة *</label>
-        <input type="text" id="t-title" class="form-control" placeholder="مثال: مراجعة الفصل الأول في الكيمياء">
+        <input type="text" id="t-title" class="form-control" placeholder="مثال: مراجعة أو مهمة جديدة">
       </div>
       <div class="grid-2" style="margin-bottom:0;">
         <div class="form-group">
           <label class="form-label">المادة</label>
           <select id="t-subject" class="form-control">
-            <option value="أحياء">أحياء</option>
-            <option value="كيمياء">كيمياء</option>
-            <option value="فيزياء">فيزياء</option>
-            <option value="عربي">لغة عربية</option>
-            <option value="إنجليزي">لغة إنجليزية</option>
-            <option value="جيولوجيا">جيولوجيا</option>
-            <option value="عام">عام / حياة يومية</option>
+            <option value="عام">عام / نشاط شخصي</option>
+            <option value="دراسة">دراسة</option>
+            <option value="عمل">عمل</option>
+            <option value="شخصي">شخصي</option>
           </select>
         </div>
         <div class="form-group">
@@ -1351,7 +1351,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">المادة / اسم الدرس *</label>
-        <input type="text" id="l-title" class="form-control" placeholder="مثال: درس الفيزياء">
+        <input type="text" id="l-title" class="form-control" placeholder="مثال: اسم الدرس أو النشاط">
       </div>
       <div class="grid-2" style="margin-bottom:0;">
         <div class="form-group">
@@ -1374,6 +1374,14 @@
         </div>
       </div>
       <div class="form-group">
+        <label class="form-label">تكرار الدرس</label>
+        <select id="l-repeat" class="form-control">
+          <option value="once">مرة واحدة</option>
+          <option value="weekly">يتكرر أسبوعياً في نفس اليوم</option>
+        </select>
+        <small style="color:var(--text-muted);display:block;margin-top:5px;">عند اختيار التكرار الأسبوعي، سيظل الموعد محفوظاً ويظهر تلقائياً كل أسبوع دون إعادة إدخاله.</small>
+      </div>
+      <div class="form-group">
         <label class="form-label">واجب أو ملاحظات</label>
         <input type="text" id="l-notes" class="form-control" placeholder="تسميع الفصل الثاني">
       </div>
@@ -1390,23 +1398,16 @@
       </div>
       <div class="form-group">
         <label class="form-label">المادة</label>
-        <select id="g-subject" class="form-control">
-          <option value="أحياء">أحياء</option>
-          <option value="كيمياء">كيمياء</option>
-          <option value="فيزياء">فيزياء</option>
-          <option value="عربي">عربي</option>
-          <option value="إنجليزي">إنجليزي</option>
-          <option value="جيولوجيا">جيولوجيا</option>
-        </select>
+        <input type="text" id="g-subject" class="form-control" placeholder="اكتب اسم المادة" required>
       </div>
       <div class="grid-2" style="margin-bottom:0;">
         <div class="form-group">
           <label class="form-label">الدرجة التي حصلتِ عليها</label>
-          <input type="number" id="g-score" class="form-control" placeholder="45">
+          <input type="number" id="g-score" class="form-control" placeholder="45" min="0" step="any">
         </div>
         <div class="form-group">
           <label class="form-label">الدرجة النهائية</label>
-          <input type="number" id="g-total" class="form-control" value="50">
+          <input type="number" id="g-total" class="form-control" value="50" min="0.01" step="any">
         </div>
       </div>
       <div class="form-group">
@@ -1498,11 +1499,11 @@
   <div class="modal-backdrop" id="dream-modal" onclick="if(event.target===this) closeModal('dream-modal')">
     <div class="modal-sheet">
       <div class="section-title">
-        <span>🩺 إعدادات حلم العلاج الطبيعي</span>
+        <span>🎯 إعدادات الهدف الشخصي</span>
         <button class="mini-action" onclick="closeModal('dream-modal')">✕</button>
       </div>
       <div class="form-group">
-        <label class="form-label">تاريخ امتحانات الثانوية العامة</label>
+        <label class="form-label">التاريخ المستهدف (اختياري)</label>
         <input type="date" id="d-date" class="form-control">
       </div>
       <div class="form-group">
@@ -1522,65 +1523,44 @@
     }
 
     // ==================== STATE & INITIAL DATA ====================
-    const STORAGE_KEY = 'malak_companion_v1';
-    const todayISO = () => new Date().toISOString().split('T')[0];
+    const STORAGE_KEY = 'personal_planner_v2';
+    const todayISO = () => { const d = new Date(); const local = new Date(d.getTime() - d.getTimezoneOffset()*60000); return local.toISOString().slice(0,10); };
 
     const MOTIVATIONAL_QUOTES = [
-      "كل صفحة بتذاكريها النهارده بتقربك خطوة من البالطو الأبيض وكلية العلاج الطبيعي ♡",
-      "تعب النهارده هو فخر بكرة يا دكتورة ملك ✨",
-      "مش لازم تكوني مثالية، المهم تكملي وما توقفيش ♡",
-      "كل خطوة صغيرة ليها قيمة كبيرة في رحلتك للنجاح 🌟",
-      "مستقبلك بيتبني بعادات صغيرة بتعمليها كل يوم بتركيز 💪",
-      "ثقي في نفسك وفي تعبك.. ربنا لا يضيع أجر من أحسن عملاً ♡",
-      "أنتِ أقوى من أي ضغط، وكل مادة صعبة بتسهل بالاستمرار ✨"
+      "ابدأ بما تستطيع، واستمر خطوة بخطوة.",
+      "التنظيم الجيد يجعل اليوم أخف وأسهل.",
+      "ليس المطلوب أن تنجز كل شيء دفعة واحدة.",
+      "خصص وقتاً للراحة كما تخصص وقتاً للعمل.",
+      "التقدم البسيط أفضل من التوقف."
     ];
 
-    const defaultData = {
-      tasks: [
-        { id: 't1', title: 'مراجعة الفصل الأول في الكيمياء', subject: 'كيمياء', priority: 'عاجلة', date: todayISO(), duration: 45, desc: 'العناصر الانتقالية', done: true, rewarded: true },
-        { id: 't2', title: 'حل 20 سؤال في الفيزياء', subject: 'فيزياء', priority: 'مهمة', date: todayISO(), duration: 50, desc: 'قانون أوم للدوائر المغلقة', done: true, rewarded: true },
-        { id: 't3', title: 'مذاكرة الدعامة في الإنسان - أحياء', subject: 'أحياء', priority: 'مهمة', date: todayISO(), duration: 60, desc: 'رسم الفقرة العظمية', done: false, rewarded: false },
-        { id: 't4', title: 'حل قطعة نحو وبلاغة', subject: 'عربي', priority: 'عادية', date: todayISO(), duration: 30, desc: 'كتاب الامتحان', done: false, rewarded: false }
-      ],
-      lessons: [
-        { id: 'l1', title: 'الفيزياء', teacher: 'أ/ محمود', place: 'سنتر الأوائل', date: todayISO(), time: '16:00', notes: 'امتحان قصير على الفصل الأول' },
-        { id: 'l2', title: 'الكيمياء', teacher: 'أ/ سارة', place: 'أونلاين', date: todayISO(), time: '19:00', notes: 'مراجعة الباب الأول' }
-      ],
-      prayers: {
-        [todayISO()]: { fajr: true, dhuhr: true, asr: false, maghrib: false, isha: false, quran: 4 }
-      },
-      study: [
-        { id: 's1', date: todayISO(), subject: 'كيمياء', mins: 50 },
-        { id: 's2', date: todayISO(), subject: 'أحياء', mins: 25 }
-      ],
-      grades: [
-        { id: 'g1', subject: 'أحياء', title: 'اختبار الدعامة', score: 45, total: 50 },
-        { id: 'g2', subject: 'كيمياء', title: 'شامل الباب الأول', score: 38, total: 50 },
-        { id: 'g3', subject: 'فيزياء', title: 'كويز التيار الكهربي', score: 31, total: 50 },
-        { id: 'g4', subject: 'عربي', title: 'نحو الوحدة الأولى', score: 43, total: 50 }
-      ],
-      exams: [
-        { id: 'e1', subject: 'شامل أحياء (الفصل الأول)', date: '2026-11-20' },
-        { id: 'e2', subject: 'امتحان فيزياء كهربية', date: '2026-11-24' }
-      ],
-      mistakes: [
-        { id: 'm1', subject: 'فيزياء', question: 'حساب المقاومة المكافئة عند غلق المفتاح', reason: 'عدم ملاحظة السلك الفارغ المتصل على التوازي', solution: 'السلك الفارغ يلغي المقاومة المتصلة معه على التوازي' }
-      ],
-      dream: {
-        examDate: '2027-06-15',
-        letter: 'أهلاً دكتورة ملك.. فخورة بكل ساعة تعب ومذاكرة وصلتني لكلية العلاج الطبيعي ♡'
-      },
-      points: 35,
-      streak: 4,
-      lastActiveDate: todayISO()
+    const emptyData = {
+      profile: { name: '', goal: '', setupComplete: false },
+      tasks: [], lessons: [], prayers: {}, study: [], grades: [], exams: [], mistakes: [],
+      dream: { examDate: '', letter: 'كل خطوة صغيرة تقرّبني من هدفي.' },
+      points: 0, streak: 0, lastActiveDate: todayISO()
     };
 
-    let state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultData;
+    let state;
+    try { state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || structuredClone(emptyData); }
+    catch { state = JSON.parse(JSON.stringify(emptyData)); }
+    state.profile ||= { name: '', goal: '', setupComplete: false };
+    ['tasks','lessons','study','grades','exams','mistakes'].forEach(k => { if (!Array.isArray(state[k])) state[k] = []; });
+    state.prayers ||= {}; state.dream ||= { examDate:'', letter:'' };
     let currentTaskFilter = 'today';
 
+    function escapeHTML(value) {
+      return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    }
+
     function saveState() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      renderAll();
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        renderAll();
+      } catch (error) {
+        console.error('Planner save failed:', error);
+        showToast('تعذر حفظ البيانات. مساحة التخزين قد تكون ممتلئة؛ صدّر نسخة احتياطية.', '⚠️');
+      }
     }
 
     // ==================== INITIALIZATION & STARS ====================
@@ -1588,11 +1568,47 @@
       createStars();
       setupDateAndQuote();
       renderAll();
+      document.getElementById("setup-date").value = todayISO();
+      document.getElementById("setup-time").value = "16:00";
+      if (state.profile.setupComplete) document.getElementById("first-setup").classList.remove("open");
+      updateProfileUI();
 
       setTimeout(() => {
         document.getElementById('splash-screen').classList.add('hidden');
       }, 1300);
     });
+
+    function openProfileSetup(edit = false) {
+      document.getElementById('setup-name').value = state.profile.name || '';
+      document.getElementById('setup-goal').value = state.profile.goal || '';
+      const lessonField = document.getElementById('setup-lesson')?.closest('.form-group');
+      if (lessonField) lessonField.style.display = state.profile.setupComplete ? 'none' : '';
+      document.getElementById('first-setup').classList.add('open');
+    }
+
+    function completeFirstSetup() {
+      const name = document.getElementById('setup-name').value.trim();
+      const goal = document.getElementById('setup-goal').value.trim();
+      if (!name) { showToast('اكتب اسمك للمتابعة', '⚠️'); return; }
+      const isFirstSetup = !state.profile?.setupComplete;
+      state.profile = { name, goal, setupComplete: true };
+      const lessonTitle = document.getElementById('setup-lesson').value.trim();
+      const date = document.getElementById('setup-date').value;
+      const time = document.getElementById('setup-time').value;
+      if (isFirstSetup && lessonTitle && date && time) state.lessons.push({ id:'l_'+Date.now(), title:lessonTitle, teacher:'', place:'', date, time, notes:'', repeat:'once' });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      document.getElementById('first-setup').classList.remove('open');
+      updateProfileUI(); renderAll(); showToast('تم حفظ بياناتك بنجاح', '✅');
+    }
+
+    function updateProfileUI() {
+      const name = state.profile?.name || 'مرحباً بك';
+      const goal = state.profile?.goal || 'مساحتك لتنظيم يومك';
+      document.getElementById('profile-name-display').textContent = name;
+      document.getElementById('profile-goal-display').textContent = goal;
+      document.getElementById('dashboard-goal').textContent = goal || 'أضف هدفك من الإعدادات';
+      document.getElementById('dream-goal-display').textContent = goal || 'هدفي الشخصي';
+    }
 
     function createStars() {
       const container = document.getElementById('stars-bg');
@@ -1634,7 +1650,7 @@
 
     function openModal(id) {
       if (id === 'dream-modal') {
-        document.getElementById('d-date').value = state.dream.examDate || '2027-06-15';
+        document.getElementById('d-date').value = state.dream.examDate || '';
         document.getElementById('d-letter').value = state.dream.letter || '';
       }
       document.getElementById(id).classList.add('open');
@@ -1724,7 +1740,7 @@
     function saveTask() {
       const title = document.getElementById('t-title').value.trim();
       if (!title) {
-        showToast('اكتبي اسم المهمة الأول يا ملك!', '⚠️');
+        showToast('اكتب اسم المهمة أولاً!', '⚠️');
         return;
       }
       const editId = document.getElementById('edit-task-id').value;
@@ -1828,30 +1844,59 @@
     }
 
     // ==================== LESSONS MANAGEMENT ====================
+    let editingLessonId = null;
+
+    function openLessonModal(id = null) {
+      editingLessonId = id;
+      const lesson = id ? state.lessons.find(item => item.id === id) : null;
+      document.getElementById('l-title').value = lesson?.title || '';
+      document.getElementById('l-teacher').value = lesson?.teacher || '';
+      document.getElementById('l-place').value = lesson?.place || '';
+      document.getElementById('l-date').value = lesson?.date || todayISO();
+      document.getElementById('l-time').value = lesson?.time || '16:00';
+      document.getElementById('l-repeat').value = lesson?.repeat || 'once';
+      document.getElementById('l-notes').value = lesson?.notes || '';
+      const heading = document.querySelector('#lesson-modal .section-title span');
+      const button = document.querySelector('#lesson-modal .btn-primary');
+      if (heading) heading.textContent = id ? '✏️ تعديل موعد الدرس' : '📅 إضافة موعد درس';
+      if (button) button.textContent = id ? 'حفظ التعديلات' : 'حفظ الدرس';
+      openModal('lesson-modal');
+    }
+
     function saveLesson() {
       const title = document.getElementById('l-title').value.trim();
       const date = document.getElementById('l-date').value;
       const time = document.getElementById('l-time').value;
-      if (!title || !date) {
-        showToast('أدخلي اسم المادة والتاريخ من فضلك', '⚠️');
+      if (!title || !date || !time) {
+        showToast('أدخل اسم الدرس والتاريخ والوقت من فضلك', '⚠️');
         return;
       }
-      state.lessons.push({
-        id: 'l_' + Date.now(),
+      const lessonData = {
         title,
         teacher: document.getElementById('l-teacher').value.trim(),
         place: document.getElementById('l-place').value.trim(),
         date,
         time,
-        notes: document.getElementById('l-notes').value.trim()
-      });
+        repeat: document.getElementById('l-repeat')?.value || 'once',
+        notes: document.getElementById('l-notes').value.trim(),
+        updatedAt: new Date().toISOString()
+      };
+      if (editingLessonId) {
+        const index = state.lessons.findIndex(item => item.id === editingLessonId);
+        if (index !== -1) state.lessons[index] = { ...state.lessons[index], ...lessonData };
+        showToast('تم تحديث بيانات الدرس بنجاح', '✏️');
+      } else {
+        state.lessons.push({ id: 'l_' + Date.now(), ...lessonData, createdAt: new Date().toISOString() });
+        showToast('تم حفظ الدرس في جدولك 📅', '✅');
+      }
+      editingLessonId = null;
       closeModal('lesson-modal');
-      showToast('تمت إضافة موعد الدرس 📅', '✅');
       saveState();
     }
 
     function deleteLesson(id) {
       state.lessons = state.lessons.filter(l => l.id !== id);
+      if (editingLessonId === id) editingLessonId = null;
       showToast('تم حذف الدرس', '🗑️');
       saveState();
     }
@@ -1864,42 +1909,53 @@
       return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
     }
 
-    function renderLessons() {
-      const sorted = [...state.lessons].sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
-      const upcoming = sorted.filter(l => l.date >= todayISO());
-      document.getElementById('stat-lessons-cnt').textContent = upcoming.length;
-
-      const dashBox = document.getElementById('dash-lessons-list');
-      if (upcoming.length === 0) {
-        dashBox.innerHTML = `<div style="font-size:0.76rem; color:var(--text-muted); padding:10px 0;">لا توجد دروس قادمة ✨</div>`;
-      } else {
-        dashBox.innerHTML = upcoming.slice(0, 2).map(l => `
-          <div class="lesson-mini">
-            <div class="lesson-mini-title">${l.title} - ${formatTime12(l.time)}</div>
-            <div class="lesson-mini-time">${l.date} ${l.place ? '• ' + l.place : ''}</div>
-          </div>
-        `).join('');
+    function getLessonOccurrences(lesson, fromDate = todayISO(), daysAhead = 56) {
+      const start = new Date(`${lesson.date}T00:00:00`);
+      const from = new Date(`${fromDate}T00:00:00`);
+      const end = new Date(from.getTime() + daysAhead * 86400000);
+      if (Number.isNaN(start.getTime())) return [];
+      if (lesson.repeat !== 'weekly') {
+        return lesson.date >= fromDate && lesson.date <= end.toISOString().slice(0,10)
+          ? [{ ...lesson, occurrenceDate: lesson.date }] : [];
       }
+      const first = start < from ? new Date(from) : start;
+      const offset = (start.getDay() - first.getDay() + 7) % 7;
+      first.setDate(first.getDate() + offset);
+      const occurrences = [];
+      for (let cursor = first; cursor <= end; cursor.setDate(cursor.getDate() + 7)) {
+        const date = `${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,'0')}-${String(cursor.getDate()).padStart(2,'0')}`;
+        occurrences.push({ ...lesson, occurrenceDate: date });
+      }
+      return occurrences;
+    }
+
+    function renderLessons() {
+      const today = todayISO();
+      const allOccurrences = state.lessons.flatMap(lesson => getLessonOccurrences(lesson, today, 56))
+        .sort((a,b) => (a.occurrenceDate + (a.time || '')).localeCompare(b.occurrenceDate + (b.time || '')));
+      document.getElementById('stat-lessons-cnt').textContent = allOccurrences.length;
+      const dashBox = document.getElementById('dash-lessons-list');
+      dashBox.innerHTML = allOccurrences.length ? allOccurrences.slice(0, 3).map(l => `
+        <div class="lesson-mini">
+          <div class="lesson-mini-title">${escapeHTML(l.title)} - ${formatTime12(l.time)}</div>
+          <div class="lesson-mini-time">${l.occurrenceDate} ${l.place ? '• ' + escapeHTML(l.place) : ''} ${l.repeat === 'weekly' ? '• أسبوعي' : ''}</div>
+        </div>`).join('') : `<div style="font-size:0.76rem;color:var(--text-muted);padding:10px 0;">لا توجد دروس قادمة ✨</div>`;
 
       const fullBox = document.getElementById('full-lessons-list');
-      if (sorted.length === 0) {
-        fullBox.innerHTML = `<div style="text-align:center; color:var(--text-muted); font-size:0.84rem; padding:12px;">لم يتم إضافة دروس بعد</div>`;
-      } else {
-        fullBox.innerHTML = sorted.map(l => `
-          <div class="task-item">
-            <div class="task-body">
-              <div class="task-title">${l.title} ${l.teacher ? `(${l.teacher})` : ''}</div>
-              <div class="task-meta">
-                <span>📅 ${l.date}</span>
-                <span>⏰ ${formatTime12(l.time)}</span>
-                ${l.place ? `<span>📍 ${l.place}</span>` : ''}
-              </div>
-              ${l.notes ? `<div style="font-size:0.74rem; color:var(--gold); margin-top:3px;">📝 ${l.notes}</div>` : ''}
-            </div>
-            <button class="mini-action" onclick="deleteLesson('${l.id}')">🗑️</button>
+      const sorted = [...state.lessons].sort((a,b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
+      fullBox.innerHTML = sorted.length ? sorted.map(l => `
+        <div class="task-item">
+          <div class="task-body">
+            <div class="task-title">${escapeHTML(l.title)} ${l.teacher ? `(${escapeHTML(l.teacher)})` : ''}</div>
+            <div class="task-meta"><span>📅 يبدأ من ${l.date}</span><span>⏰ ${formatTime12(l.time)}</span>${l.place ? `<span>📍 ${escapeHTML(l.place)}</span>` : ''}</div>
+            ${l.repeat === 'weekly' ? `<div style="font-size:.73rem;color:var(--mint);margin-top:4px;">🔁 موعد أسبوعي محفوظ — يتكرر تلقائياً</div>` : (l.date < today ? `<div style="font-size:.73rem;color:var(--text-muted);margin-top:4px;">✓ انتهى الموعد — محفوظ في سجل الدروس</div>` : '')}
+            ${l.notes ? `<div style="font-size:0.74rem;color:var(--gold);margin-top:3px;">📝 ${escapeHTML(l.notes)}</div>` : ''}
           </div>
-        `).join('');
-      }
+          <div style="display:flex;gap:5px;align-items:center;">
+            <button class="mini-action" onclick="openLessonModal('${String(l.id).replace(/'/g, '')}')" title="تعديل الموعد">✏️</button>
+            <button class="mini-action" onclick="deleteLesson('${String(l.id).replace(/'/g, '')}')" title="حذف الموعد">🗑️</button>
+          </div>
+        </div>`).join('') : `<div style="text-align:center;color:var(--text-muted);font-size:0.84rem;padding:12px;">لم يتم إضافة دروس بعد</div>`;
     }
 
     // ==================== PRAYER & QURAN TRACKER ====================
@@ -1922,7 +1978,7 @@
     function togglePrayer(key) {
       const p = getTodayPrayer();
       p[key] = !p[key];
-      if (p[key]) showToast('تقبل الله طاعتك يا ملك 🤲', '🕌');
+      if (p[key]) showToast('تقبل الله طاعتك  🤲', '🕌');
       saveState();
     }
 
@@ -2014,7 +2070,7 @@
           mins: currentPomoMins
         });
         state.points += 5;
-        showToast(`عاش يا ملك! أنهيتِ ${currentPomoMins} دقيقة (+5 نقاط) 🎉`, '⏳');
+        showToast(`عاش ! أنهيتِ ${currentPomoMins} دقيقة (+5 نقاط) 🎉`, '⏳');
         saveState();
       } else {
         showToast('انتهت الاستراحة! جاهزة نكمل؟ 💪', '☕');
@@ -2102,11 +2158,11 @@
       const score = parseFloat(document.getElementById('g-score').value);
       const total = parseFloat(document.getElementById('g-total').value);
       const title = document.getElementById('g-title').value.trim() || 'اختبار';
-      if (isNaN(score) || isNaN(total) || total <= 0) {
-        showToast('أدخلي الدرجة بشكل صحيح', '⚠️');
+      if (!Number.isFinite(score) || !Number.isFinite(total) || total <= 0 || score < 0 || score > total) {
+        showToast('تأكد من إدخال درجة من 0 إلى الدرجة النهائية', '⚠️');
         return;
       }
-      state.grades.unshift({ id: 'g_' + Date.now(), subject, title, score, total });
+      state.grades.unshift({ id: 'g_' + Date.now(), subject, title, score, total, date: todayISO(), createdAt: new Date().toISOString() });
       closeModal('grade-modal');
       showToast('تم إضافة الدرجة وتحليل الأداء 📊', '✅');
       saveState();
@@ -2133,7 +2189,7 @@
       const reason = document.getElementById('m-reason').value.trim();
       const solution = document.getElementById('m-solution').value.trim();
       if (!question || !solution) {
-        showToast('اكتبي السؤال والحل الصحيح', '⚠️');
+        showToast('اكتب السؤال والحل الصحيح', '⚠️');
         return;
       }
       state.mistakes.unshift({ id: 'm_' + Date.now(), subject, question, reason, solution });
@@ -2147,82 +2203,120 @@
       saveState();
     }
 
+    function gradeDate(grade) {
+      return grade.date || (grade.createdAt ? grade.createdAt.slice(0,10) : '');
+    }
+
+    function gradePercent(grade) {
+      const score = Number(grade.score), total = Number(grade.total);
+      return Number.isFinite(score) && Number.isFinite(total) && total > 0 ? (score / total) * 100 : null;
+    }
+
+    function weightedAverage(grades) {
+      const valid = grades.filter(g => gradePercent(g) !== null);
+      const totalScore = valid.reduce((sum,g) => sum + Number(g.score), 0);
+      const totalPossible = valid.reduce((sum,g) => sum + Number(g.total), 0);
+      return totalPossible ? (totalScore / totalPossible) * 100 : null;
+    }
+
+    function deleteGrade(id) {
+      state.grades = state.grades.filter(g => g.id !== id);
+      saveState();
+      showToast('تم حذف نتيجة الاختبار', '🗑️');
+    }
+
     function renderAnalytics() {
+      const validGrades = state.grades.filter(g => gradePercent(g) !== null);
+      const overall = weightedAverage(validGrades);
+      document.getElementById('overall-avg-badge').textContent = overall === null ? '—' : `${overall.toFixed(1)}%`;
+      document.getElementById('grades-count-val').textContent = validGrades.length;
+
+      const weekStart = new Date(`${todayISO()}T00:00:00`);
+      weekStart.setDate(weekStart.getDate() - 6);
+      const weekStartISO = `${weekStart.getFullYear()}-${String(weekStart.getMonth()+1).padStart(2,'0')}-${String(weekStart.getDate()).padStart(2,'0')}`;
+      const recentWeek = validGrades.filter(g => gradeDate(g) >= weekStartISO && gradeDate(g) <= todayISO());
+      const weekly = weightedAverage(recentWeek);
+      const weeklyText = weekly === null ? '—' : `${weekly.toFixed(1)}%`;
+      document.getElementById('weekly-score-val').textContent = weeklyText;
+      const analyticsWeekly = document.getElementById('analytics-weekly-score-val');
+      if (analyticsWeekly) analyticsWeekly.textContent = weeklyText;
+
+      const miniBars = document.getElementById('mini-bars');
+      if (miniBars) {
+        const latest = [...validGrades].sort((a,b) => gradeDate(a).localeCompare(gradeDate(b))).slice(-5);
+        miniBars.innerHTML = latest.length ? latest.map(g => `<div class="bar-col" title="${escapeHTML(g.subject)}: ${gradePercent(g).toFixed(1)}%" style="height:${Math.max(5, Math.min(100, gradePercent(g)))}%"></div>`).join('') : `<span style="font-size:.7rem;color:var(--text-muted);">سجّل أول اختبار لعرض النتائج</span>`;
+      }
+
       const bySubj = {};
-      state.grades.forEach(g => {
-        const pct = (g.score / g.total) * 100;
-        if (!bySubj[g.subject]) bySubj[g.subject] = [];
-        bySubj[g.subject].push(pct);
+      validGrades.forEach(g => {
+        const key = g.subject || 'غير محدد';
+        if (!bySubj[key]) bySubj[key] = [];
+        bySubj[key].push(g);
       });
-
-      const subjAvgs = Object.keys(bySubj).map(sub => {
-        const avg = Math.round(bySubj[sub].reduce((a, b) => a + b, 0) / bySubj[sub].length);
-        return { subject: sub, avg, count: bySubj[sub].length };
-      }).sort((a, b) => b.avg - a.avg);
-
-      const overall = subjAvgs.length ? Math.round(subjAvgs.reduce((a, b) => a + b.avg, 0) / subjAvgs.length) : 0;
-      document.getElementById('overall-avg-badge').textContent = overall + '%';
-      document.getElementById('weekly-score-val').textContent = (overall || 85) + '%';
+      const subjAvgs = Object.entries(bySubj).map(([subject, grades]) => ({
+        subject, avg: weightedAverage(grades), count: grades.length,
+        score: grades.reduce((sum,g) => sum + Number(g.score), 0),
+        total: grades.reduce((sum,g) => sum + Number(g.total), 0)
+      })).sort((a,b) => a.avg - b.avg);
 
       const barsBox = document.getElementById('subjects-bars-list');
-      if (subjAvgs.length === 0) {
-        barsBox.innerHTML = `<div style="color:var(--text-muted); font-size:0.82rem;">سجّلي درجات اختباراتك لعرض التحليل</div>`;
+      barsBox.innerHTML = subjAvgs.length ? subjAvgs.map(item => {
+        const avg = item.avg;
+        const color = avg >= 85 ? 'var(--mint)' : (avg >= 70 ? 'var(--purple-main)' : 'var(--pink)');
+        return `<div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;gap:8px;font-size:.82rem;margin-bottom:5px;">
+            <span><strong>${escapeHTML(item.subject)}</strong> <span style="color:var(--text-muted);font-size:.72rem;">(${item.count} اختبار)</span></span>
+            <span style="color:${color};font-weight:800;">${avg.toFixed(1)}%</span>
+          </div>
+          <div style="height:8px;background:rgba(255,255,255,.07);border-radius:8px;overflow:hidden;">
+            <div style="height:100%;width:${Math.max(0,Math.min(100,avg))}%;background:${color};border-radius:8px;"></div>
+          </div>
+          <div style="font-size:.68rem;color:var(--text-muted);margin-top:3px;">${item.score} من ${item.total} درجة إجمالية</div>
+        </div>`;
+      }).join('') : `<div style="color:var(--text-muted);font-size:.82rem;">سجّل درجات الاختبارات لعرض تحليل دقيق. المتوسط سيُحسب من مجموع الدرجات إلى مجموع النهايات الكبرى.</div>`;
+
+      const weak = subjAvgs.filter(item => item.avg < 70);
+      const strong = [...subjAvgs].filter(item => item.avg >= 85).sort((a,b) => b.avg-a.avg);
+      const alertTxt = document.getElementById('weakness-analysis-text');
+      if (!validGrades.length) {
+        alertTxt.textContent = 'لا توجد نتائج كافية للتحليل حالياً. أضف درجة كل اختبار مع الدرجة النهائية، وسيتم حساب المتوسط ونقاط القوة والمواد التي تحتاج إلى دعم.';
       } else {
-        barsBox.innerHTML = subjAvgs.map(s => {
-          const color = s.avg >= 85 ? 'var(--mint)' : (s.avg >= 70 ? 'var(--purple-main)' : 'var(--pink)');
-          return `
-            <div style="margin-bottom:10px;">
-              <div style="display:flex; justify-content:space-between; font-size:0.82rem; margin-bottom:4px;">
-                <span><strong>${s.subject}</strong> <span style="color:var(--text-muted); font-size:0.72rem;">(${s.count} اختبار)</span></span>
-                <span style="color:${color}; font-weight:800;">${s.avg}%</span>
-              </div>
-              <div style="height:8px; background:rgba(255,255,255,0.07); border-radius:8px; overflow:hidden;">
-                <div style="height:100%; width:${s.avg}%; background:${color}; border-radius:8px;"></div>
-              </div>
-            </div>
-          `;
-        }).join('');
+        const parts = [];
+        if (weak.length) parts.push(`تحتاج إلى تركيز إضافي: ${weak.map(x => `${escapeHTML(x.subject)} (${x.avg.toFixed(1)}%)`).join('، ')}. راجع الأخطاء وحل تدريبات إضافية.`);
+        if (strong.length) parts.push(`نقاط قوة واضحة: ${strong.map(x => `${escapeHTML(x.subject)} (${x.avg.toFixed(1)}%)`).join('، ')}. حافظ على مستواك بالمراجعة المستمرة.`);
+        if (!weak.length && !strong.length) parts.push('الأداء في المستوى المتوسط حالياً. ركّز على مراجعة الأخطاء وحاول رفع نتيجة الاختبار القادم تدريجياً.');
+        parts.push(`المتوسط العام الموزون لجميع الاختبارات: ${overall.toFixed(1)}%.`);
+        if (validGrades.length === 1) parts.push('هذا التقييم مبدئي لأنه مبني على اختبار واحد فقط.');
+        alertTxt.innerHTML = parts.join('<br>');
       }
 
-      const weak = subjAvgs.filter(s => s.avg < 75);
-      const alertTxt = document.getElementById('weakness-analysis-text');
-      if (weak.length > 0) {
-        const names = weak.map(w => `${w.subject} (${w.avg}%)`).join(' و ');
-        alertTxt.innerHTML = `مادة <strong>${names}</strong> تحتاج إلى مراجعة إضافية وحل أسئلة أكثر لرفع مستواها. ${weak[0].count === 1 ? '(ملاحظة: التقييم مبني على اختبار واحد، أضيفي اختبارات أخرى لدقة أعلى)' : ''}`;
-      } else if (subjAvgs.length > 0) {
-        alertTxt.innerHTML = `مستواكِ ممتاز ومتوازن في جميع المواد المسجلة! استمري بنفس الوتيرة يا دكتورة ملك ♡`;
-      } else {
-        alertTxt.innerHTML = `أضيفي درجات اختباراتك ليقوم النظام باكتشاف نقاط القوة والمواد التي تحتاج إلى دعم.`;
-      }
+      const historyBox = document.getElementById('grades-history-list');
+      const history = [...validGrades].sort((a,b) => gradeDate(b).localeCompare(gradeDate(a)));
+      historyBox.innerHTML = history.length ? history.map(g => `
+        <div class="task-item">
+          <div class="task-body">
+            <div class="task-title">${escapeHTML(g.subject || 'غير محدد')} — ${escapeHTML(g.title || 'اختبار')}</div>
+            <div class="task-meta"><span>📅 ${gradeDate(g) || 'تاريخ غير مسجل'}</span><span>🎯 ${g.score} / ${g.total}</span><span style="color:var(--mint);font-weight:700;">${gradePercent(g).toFixed(1)}%</span></div>
+          </div>
+          <button class="mini-action" onclick="deleteGrade('${String(g.id).replace(/'/g,'')}')" title="حذف النتيجة">🗑️</button>
+        </div>`).join('') : `<div style="font-size:.8rem;color:var(--text-muted);">لا توجد اختبارات مسجلة بعد.</div>`;
 
       const examsBox = document.getElementById('exams-list');
-      const sortedExams = [...state.exams].sort((a, b) => a.date.localeCompare(b.date));
+      const sortedExams = [...state.exams].sort((a,b) => a.date.localeCompare(b.date));
       examsBox.innerHTML = sortedExams.length ? sortedExams.map(e => {
-        const diff = Math.ceil((new Date(e.date) - new Date(todayISO())) / (1000 * 60 * 60 * 24));
+        const diff = Math.ceil((new Date(`${e.date}T00:00:00`) - new Date(`${todayISO()}T00:00:00`)) / 86400000);
         const badge = diff < 0 ? 'انتهى' : (diff === 0 ? 'اليوم!' : `باقي ${diff} يوم`);
-        return `
-          <div class="task-item">
-            <div class="task-body">
-              <div class="task-title">${e.subject}</div>
-              <div class="task-meta"><span>📅 ${e.date}</span> • <span style="color:var(--gold);">${badge}</span></div>
-            </div>
-            <button class="mini-action" onclick="deleteExam('${e.id}')">🗑️</button>
-          </div>
-        `;
-      }).join('') : `<div style="font-size:0.8rem; color:var(--text-muted);">لا توجد امتحانات مسجلة</div>`;
+        return `<div class="task-item"><div class="task-body"><div class="task-title">${escapeHTML(e.subject)}</div><div class="task-meta"><span>📅 ${e.date}</span> • <span style="color:var(--gold);">${badge}</span></div></div><button class="mini-action" onclick="deleteExam('${String(e.id).replace(/'/g,'')}')">🗑️</button></div>`;
+      }).join('') : `<div style="font-size:.8rem;color:var(--text-muted);">لا توجد امتحانات مسجلة</div>`;
 
       const mistakesBox = document.getElementById('mistakes-list');
       mistakesBox.innerHTML = state.mistakes.length ? state.mistakes.map(m => `
-        <div class="task-item" style="flex-direction:column; align-items:stretch;">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span class="tag tag-urgent">${m.subject}</span>
-            <button class="mini-action" onclick="deleteMistake('${m.id}')">🗑️</button>
-          </div>
-          <div style="font-size:0.85rem; font-weight:700; margin-top:4px;">❓ ${m.question}</div>
-          ${m.reason ? `<div style="font-size:0.75rem; color:var(--pink);">⚠️ السبب: ${m.reason}</div>` : ''}
-          <div style="font-size:0.78rem; color:var(--mint); margin-top:2px;">✅ الحل: ${m.solution}</div>
-        </div>
-      `).join('') : `<div style="font-size:0.8rem; color:var(--text-muted);">دفتر الأخطاء فارغ حالياً</div>`;
+        <div class="task-item" style="flex-direction:column;align-items:stretch;">
+          <div style="display:flex;justify-content:space-between;align-items:center;"><span class="tag tag-urgent">${escapeHTML(m.subject)}</span><button class="mini-action" onclick="deleteMistake('${String(m.id).replace(/'/g,'')}')">🗑️</button></div>
+          <div style="font-size:.85rem;font-weight:700;margin-top:4px;">❓ ${escapeHTML(m.question)}</div>
+          ${m.reason ? `<div style="font-size:.75rem;color:var(--pink);">⚠️ السبب: ${escapeHTML(m.reason)}</div>` : ''}
+          <div style="font-size:.78rem;color:var(--mint);margin-top:2px;">✅ الحل: ${escapeHTML(m.solution)}</div>
+        </div>`).join('') : `<div style="font-size:.8rem;color:var(--text-muted);">دفتر الأخطاء فارغ حالياً</div>`;
     }
 
     // ==================== REWARDS & DREAM TRACKER ====================
@@ -2230,7 +2324,7 @@
       state.dream.examDate = document.getElementById('d-date').value;
       state.dream.letter = document.getElementById('d-letter').value.trim();
       closeModal('dream-modal');
-      showToast('تم تحديث إعدادات حلمك ♡', '🩺');
+      showToast('تم تحديث الهدف الشخصي', '🩺');
       saveState();
     }
 
@@ -2241,14 +2335,14 @@
       let levelName = 'بداية الرحلة 🌱', nextTarget = 100;
       if (pts >= 300) { levelName = 'نجمة متألقة ✨'; nextTarget = 500; }
       else if (pts >= 150) { levelName = 'بطلة مجتهدة 👑'; nextTarget = 300; }
-      else if (pts >= 50) { levelName = 'طالبة نشيطة 🌸'; nextTarget = 150; }
+      else if (pts >= 50) { levelName = 'منجز 🌸'; nextTarget = 150; }
 
       document.getElementById('user-level-name').textContent = levelName;
       document.getElementById('level-next-pts').textContent = `${pts} / ${nextTarget} نقطة`;
       document.getElementById('level-progress-bar').style.width = Math.min(100, (pts / nextTarget) * 100) + '%';
 
-      const targetDate = new Date(state.dream.examDate || '2027-06-15');
-      const diffDays = Math.max(0, Math.ceil((targetDate - new Date()) / (1000 * 60 * 60 * 24)));
+      const targetDate = state.dream.examDate ? new Date(state.dream.examDate) : null;
+      const diffDays = targetDate ? Math.max(0, Math.ceil((targetDate - new Date()) / (1000 * 60 * 60 * 24))) : '—';
       document.getElementById('dream-days-left').textContent = diffDays;
       document.getElementById('dream-letter-text').textContent = state.dream.letter;
 
@@ -2301,7 +2395,7 @@
       const upcomingLessons = state.lessons.filter(l => l.date === todayISO());
 
       if (q.includes('أبدأ') || q.includes('خطة') || q.includes('ترتيب') || q.includes('عندي')) {
-        let res = `بناءً على جدولك يا ملك، دي أفضل خطة ليكِ دلوقتي:<br>`;
+        let res = `بناءً على جدولك ، دي أفضل خطة لك دلوقتي:<br>`;
         if (urgent.length > 0) {
           res += `1️⃣ ابدئي فوراً بالمهمة العاجلة: <strong>"${urgent[0].title}"</strong> (${urgent[0].duration} دقيقة).<br>`;
         } else if (pendingTasks.length > 0) {
@@ -2310,7 +2404,7 @@
           res += `1️⃣ ما شاء الله مخلصّة مهامك! تقدري تعملي جلسة مراجعة عامة 25 دقيقة.<br>`;
         }
         if (upcomingLessons.length > 0) {
-          res += `2️⃣ خلي بالك عندك درس <strong>${upcomingLessons[0].title}</strong> الساعة ${formatTime12(upcomingLessons[0].time)}، جهزي أدواتك قبله بنص ساعة.<br>`;
+          res += `2️⃣ خلي بالك عندك درس <strong>${upcomingLessons[0].title}</strong> الساعة ${formatTime12(upcomingLessons[0].time)}، جهّز ما تحتاجه قبل الموعد بوقت كافٍ.<br>`;
         }
         res += `3️⃣ خدي راحة 5 دقايق واشربي مية بين كل جلسة والتانية ♡`;
         return res;
@@ -2326,10 +2420,10 @@
       }
 
       if (q.includes('شجع') || q.includes('تعب') || q.includes('ضغط') || q.includes('حلم')) {
-        return `يا دكتورة ملك ♡ افتكري إن التعب ده مؤقت، لكن فرحة قبولك في <strong>كلية العلاج الطبيعي</strong> هتفضل معاكي العمر كله! خدي نفس عميق، اعملي كوباية مشروب بتحبيه، وابدئي بمهمة واحدة صغيرة بس ✨`;
+        return ` ♡ افتكري إن التعب ده مؤقت، لكن فرحة قبولك في <strong>هدفك</strong> هتفضل معاكي العمر كله! خدي نفس عميق، اعملي كوباية مشروب بتحبيه، وابدئي بمهمة واحدة صغيرة بس ✨`;
       }
 
-      return `فهمتك يا ملك! عندك حالياً <strong>${pendingTasks.length} مهام متبقية</strong> و <strong>${upcomingLessons.length} دروس النهارده</strong>. لو حابة أرتبهم لكِ اضغطي على زر <strong>"أبدأ بإيه النهارده؟"</strong> فوق ♡`;
+      return `فهمتك ! عندك حالياً <strong>${pendingTasks.length} مهام متبقية</strong> و <strong>${upcomingLessons.length} دروس النهارده</strong>. لو حابب أرتبهم لكِ اضغط على زر <strong>"أبدأ بإيه النهارده؟"</strong> فوق ♡`;
     }
 
     // ==================== BACKUP & RESTORE ====================
@@ -2338,7 +2432,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `MALAK_Backup_${todayISO()}.json`;
+      a.download = `MyPlanner_Backup_${todayISO()}.json`;
       a.click();
       showToast('تم تحميل ملف النسخة الاحتياطية 📤', '✅');
     }
@@ -2365,7 +2459,7 @@
     }
 
     function resetAllData() {
-      if (confirm('هل أنتِ متأكدة من مسح جميع البيانات وإعادة التطبيق لحالته الأولى؟')) {
+      if (confirm('هل أنت متأكدة من مسح جميع البيانات وإعادة التطبيق لحالته الأولى؟')) {
         localStorage.removeItem(STORAGE_KEY);
         location.reload();
       }
@@ -2388,6 +2482,7 @@
     }
 
     function renderAll() {
+      updateProfileUI();
       renderDashboardStats();
       renderTasks();
       renderLessons();

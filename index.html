@@ -1,0 +1,2401 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#10091F" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="MALAK ♡" />
+  <title>MALAK – Smart Study & Life Companion</title>
+
+  <!-- PWA Manifest & Icons -->
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+  <link rel="apple-touch-icon" href="./icon-512.png" />
+
+  <!-- Google Fonts: Tajawal & Cairo -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-main: #10091F;
+      --bg-card: rgba(27, 18, 48, 0.72);
+      --bg-card-solid: #1B1230;
+      --purple-main: #AD7BFF;
+      --purple-sec: #8852D5;
+      --pink: #F19BDC;
+      --mint: #8CE6CB;
+      --gold: #FFD78B;
+      --text-main: #F8F1FF;
+      --text-muted: #B8A8D6;
+      --border-glass: rgba(173, 123, 255, 0.22);
+      --shadow-glow: 0 10px 30px rgba(136, 82, 213, 0.22);
+      --safe-top: env(safe-area-inset-top, 12px);
+      --safe-bottom: env(safe-area-inset-bottom, 16px);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      font-family: 'Tajawal', 'Cairo', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      background-image:
+        radial-gradient(circle at 15% 12%, rgba(173, 123, 255, 0.18) 0%, transparent 42%),
+        radial-gradient(circle at 85% 25%, rgba(241, 155, 220, 0.14) 0%, transparent 45%),
+        radial-gradient(circle at 50% 85%, rgba(136, 82, 213, 0.16) 0%, transparent 50%);
+      padding-bottom: calc(88px + var(--safe-bottom));
+    }
+
+    /* Cosmic Starfield */
+    .stars-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .star {
+      position: absolute;
+      background: #fff;
+      border-radius: 50%;
+      opacity: 0.5;
+      animation: twinkle var(--dur, 3s) infinite ease-in-out;
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.2; transform: scale(0.85); }
+      50% { opacity: 0.9; transform: scale(1.25); }
+    }
+
+    /* Splash Screen */
+    #splash-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: radial-gradient(circle at center, #231442 0%, #10091F 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.65s ease, visibility 0.65s ease;
+    }
+    #splash-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .splash-crown {
+      font-size: 2.5rem;
+      animation: floatCrown 2s ease-in-out infinite;
+      filter: drop-shadow(0 0 12px rgba(255, 215, 139, 0.7));
+    }
+    .splash-title {
+      font-size: 2.8rem;
+      font-weight: 800;
+      letter-spacing: 4px;
+      background: linear-gradient(135deg, #F8F1FF, #AD7BFF, #F19BDC);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin: 6px 0;
+    }
+    .splash-sub {
+      color: var(--gold);
+      font-size: 0.95rem;
+      opacity: 0.9;
+    }
+    @keyframes floatCrown {
+      0%, 100% { transform: translateY(0) rotate(-4deg); }
+      50% { transform: translateY(-8px) rotate(4deg); }
+    }
+
+    /* App Container */
+    .app-shell {
+      position: relative;
+      z-index: 1;
+      max-width: 500px;
+      margin: 0 auto;
+      padding: calc(14px + var(--safe-top)) 16px 20px;
+    }
+
+    /* Glass Card */
+    .glass-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-glass);
+      border-radius: 22px;
+      padding: 16px;
+      box-shadow: var(--shadow-glow);
+      transition: transform 0.25s ease, border-color 0.25s ease;
+    }
+    .glass-card:active {
+      transform: scale(0.992);
+    }
+
+    /* Animations */
+    .page-section {
+      display: none;
+      animation: fadeInPage 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    .page-section.active {
+      display: block;
+    }
+    @keyframes fadeInPage {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .slide-up {
+      animation: slideUpCard 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    }
+    @keyframes slideUpCard {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes popCheck {
+      0% { transform: scale(1); }
+      45% { transform: scale(1.38); }
+      75% { transform: scale(0.9); }
+      100% { transform: scale(1); }
+    }
+    .pop-anim {
+      animation: popCheck 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* Header Profile Banner */
+    .hero-header {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, rgba(46, 26, 84, 0.85) 0%, rgba(27, 18, 48, 0.92) 60%, rgba(173, 123, 255, 0.22) 100%);
+      border-radius: 26px;
+      padding: 18px;
+      border: 1px solid rgba(241, 155, 220, 0.28);
+      margin-bottom: 14px;
+      box-shadow: 0 12px 35px rgba(16, 9, 31, 0.65);
+    }
+    .hero-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .avatar-wrap {
+      position: relative;
+      width: 68px;
+      height: 68px;
+      flex-shrink: 0;
+    }
+    .avatar-circle {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #AD7BFF, #F19BDC);
+      padding: 2.5px;
+      box-shadow: 0 0 20px rgba(173, 123, 255, 0.45);
+    }
+    .avatar-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #1B1230;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .crown-badge {
+      position: absolute;
+      top: -11px;
+      right: -2px;
+      font-size: 1.35rem;
+      transform: rotate(14deg);
+      filter: drop-shadow(0 2px 6px rgba(255, 215, 139, 0.8));
+      animation: floatCrown 2.6s ease-in-out infinite;
+    }
+    .hero-info {
+      flex: 1;
+    }
+    .hero-name {
+      font-size: 1.45rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #fff;
+    }
+    .hero-name span.heart {
+      color: var(--pink);
+      font-size: 1.2rem;
+    }
+    .hero-sub {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .hero-quote {
+      margin-top: 8px;
+      font-size: 0.84rem;
+      color: var(--gold);
+      background: rgba(255, 215, 139, 0.09);
+      border-right: 3px solid var(--gold);
+      padding: 6px 10px;
+      border-radius: 8px;
+      line-height: 1.45;
+    }
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.1rem;
+      transition: all 0.2s;
+    }
+    .icon-btn:hover {
+      background: rgba(173, 123, 255, 0.22);
+      border-color: var(--purple-main);
+    }
+
+    /* Goals & Progress Ring Card */
+    .goals-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 14px;
+      background: linear-gradient(135deg, rgba(35, 22, 62, 0.85), rgba(24, 15, 44, 0.85));
+    }
+    .progress-ring-box {
+      position: relative;
+      width: 92px;
+      height: 92px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .progress-ring-box svg {
+      transform: rotate(-90deg);
+      width: 92px;
+      height: 92px;
+    }
+    .ring-bg {
+      fill: none;
+      stroke: rgba(173, 123, 255, 0.16);
+      stroke-width: 8;
+    }
+    .ring-fill {
+      fill: none;
+      stroke: url(#ringGrad);
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-dasharray: 238.76;
+      stroke-dashoffset: 238.76;
+      transition: stroke-dashoffset 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .ring-text {
+      position: absolute;
+      text-align: center;
+    }
+    .ring-pct {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #fff;
+      display: block;
+      line-height: 1.1;
+    }
+    .ring-lbl {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+    }
+    .goals-list {
+      flex: 1;
+    }
+    .goals-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--pink);
+    }
+    .goal-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      color: var(--text-main);
+      margin-bottom: 5px;
+    }
+    .goal-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: rgba(173, 123, 255, 0.25);
+      color: var(--mint);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      flex-shrink: 0;
+    }
+
+    /* Quick Stats Strip */
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .mini-stat {
+      background: rgba(27, 18, 48, 0.78);
+      border: 1px solid rgba(173, 123, 255, 0.16);
+      border-radius: 16px;
+      padding: 10px 6px;
+      text-align: center;
+    }
+    .mini-stat-val {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--purple-main);
+      display: block;
+    }
+    .mini-stat-lbl {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+    }
+
+    /* 2-Column Grid (Lessons & Prayer) */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .card-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+    .card-hdr-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .lesson-mini {
+      background: rgba(16, 9, 31, 0.55);
+      border-radius: 12px;
+      padding: 8px 10px;
+      margin-bottom: 7px;
+      border-right: 3px solid var(--purple-main);
+    }
+    .lesson-mini:nth-child(even) {
+      border-right-color: var(--mint);
+    }
+    .lesson-mini-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+    .lesson-mini-time {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Prayer Tracker Mini & Full */
+    .prayer-hero {
+      text-align: center;
+      padding: 6px 0;
+    }
+    .prayer-next-name {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--gold);
+    }
+    .prayer-next-time {
+      font-size: 0.88rem;
+      color: #fff;
+      margin: 2px 0 8px;
+    }
+    .prayer-pills {
+      display: flex;
+      justify-content: space-between;
+      gap: 4px;
+      margin-top: 8px;
+    }
+    .prayer-pill {
+      flex: 1;
+      padding: 6px 2px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 0.65rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--text-muted);
+    }
+    .prayer-pill.done {
+      background: rgba(140, 230, 203, 0.2);
+      border-color: var(--mint);
+      color: var(--mint);
+      font-weight: 700;
+    }
+
+    /* Tasks List */
+    .tasks-card {
+      margin-bottom: 14px;
+    }
+    .add-pill-btn {
+      background: linear-gradient(135deg, var(--purple-sec), var(--purple-main));
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      padding: 6px 13px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 4px 14px rgba(173, 123, 255, 0.35);
+    }
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 12px;
+      background: rgba(16, 9, 31, 0.48);
+      border: 1px solid rgba(173, 123, 255, 0.12);
+      border-radius: 15px;
+      margin-bottom: 8px;
+      transition: all 0.25s ease;
+    }
+    .task-item.completed {
+      opacity: 0.65;
+      background: rgba(16, 9, 31, 0.28);
+    }
+    .task-check {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid var(--purple-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      color: transparent;
+      transition: all 0.2s;
+    }
+    .task-item.completed .task-check {
+      background: var(--purple-main);
+      color: #10091F;
+      border-color: var(--purple-main);
+    }
+    .task-body {
+      flex: 1;
+      min-width: 0;
+    }
+    .task-title {
+      font-size: 0.88rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .task-item.completed .task-title {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+    .task-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 3px;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+    .tag {
+      padding: 2px 7px;
+      border-radius: 8px;
+      font-size: 0.66rem;
+      font-weight: 700;
+    }
+    .tag-subj { background: rgba(173, 123, 255, 0.18); color: var(--purple-main); }
+    .tag-urgent { background: rgba(241, 155, 220, 0.2); color: var(--pink); }
+    .tag-imp { background: rgba(255, 215, 139, 0.2); color: var(--gold); }
+    .tag-norm { background: rgba(140, 230, 203, 0.16); color: var(--mint); }
+
+    .task-actions {
+      display: flex;
+      gap: 4px;
+    }
+    .mini-action {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      font-size: 0.9rem;
+    }
+    .mini-action:hover { color: var(--pink); }
+
+    /* Bottom Grid (Weekly Analytics & Advice) */
+    .bar-chart-mini {
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      height: 54px;
+      margin-top: 8px;
+    }
+    .bar-col {
+      flex: 1;
+      background: linear-gradient(to top, var(--purple-sec), var(--purple-main));
+      border-radius: 6px 6px 2px 2px;
+      min-height: 10px;
+      transition: height 0.5s ease;
+    }
+    .advice-box {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .advice-text {
+      font-size: 0.8rem;
+      line-height: 1.5;
+      color: var(--text-main);
+    }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(18, 11, 36, 0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(173, 123, 255, 0.2);
+      padding: 8px 8px calc(8px + var(--safe-bottom));
+      display: flex;
+      justify-content: space-around;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .nav-item {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 4px 10px;
+      border-radius: 14px;
+      transition: all 0.2s;
+    }
+    .nav-item .nav-icon {
+      font-size: 1.25rem;
+      transition: transform 0.2s;
+    }
+    .nav-item.active {
+      color: var(--purple-main);
+      background: rgba(173, 123, 255, 0.14);
+    }
+    .nav-item.active .nav-icon {
+      transform: translateY(-2px);
+    }
+
+    /* Forms & Inputs */
+    .form-group {
+      margin-bottom: 11px;
+    }
+    .form-label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .form-control {
+      width: 100%;
+      background: rgba(16, 9, 31, 0.75);
+      border: 1px solid rgba(173, 123, 255, 0.25);
+      border-radius: 13px;
+      padding: 10px 12px;
+      color: #fff;
+      font-size: 0.88rem;
+      outline: none;
+    }
+    .form-control:focus {
+      border-color: var(--purple-main);
+      box-shadow: 0 0 0 3px rgba(173, 123, 255, 0.16);
+    }
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, var(--purple-sec), var(--purple-main));
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(136, 82, 213, 0.35);
+      transition: transform 0.18s;
+    }
+    .btn-primary:active { transform: scale(0.98); }
+
+    .btn-outline {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-glass);
+      color: var(--text-main);
+      border-radius: 12px;
+      padding: 9px 14px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Filter Chips */
+    .chips-row {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      margin-bottom: 12px;
+    }
+    .chip {
+      padding: 6px 13px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .chip.active {
+      background: var(--purple-main);
+      color: #10091F;
+      font-weight: 700;
+      border-color: var(--purple-main);
+    }
+
+    /* Pomodoro Timer */
+    .pomo-circle {
+      width: 210px;
+      height: 210px;
+      margin: 14px auto;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .pomo-circle svg {
+      transform: rotate(-90deg);
+      width: 210px;
+      height: 210px;
+    }
+    .pomo-time {
+      position: absolute;
+      text-align: center;
+    }
+    .pomo-digits {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #fff;
+    }
+    .pomo-mode-lbl {
+      font-size: 0.8rem;
+      color: var(--pink);
+    }
+
+    /* AI Chat */
+    .chat-box {
+      max-height: 300px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding: 4px;
+    }
+    .msg {
+      max-width: 85%;
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 0.85rem;
+      line-height: 1.55;
+      animation: slideUpCard 0.3s ease;
+    }
+    .msg-ai {
+      align-self: flex-start;
+      background: rgba(173, 123, 255, 0.18);
+      border: 1px solid rgba(173, 123, 255, 0.3);
+      border-bottom-right-radius: 4px;
+    }
+    .msg-user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, var(--purple-sec), var(--purple-main));
+      color: #fff;
+      border-bottom-left-radius: 4px;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 5, 22, 0.82);
+      backdrop-filter: blur(8px);
+      z-index: 500;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-backdrop.open {
+      display: flex;
+      animation: fadeInModal 0.25s ease;
+    }
+    @keyframes fadeInModal {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .modal-sheet {
+      width: 100%;
+      max-width: 500px;
+      background: #1B1230;
+      border-top: 1px solid var(--purple-main);
+      border-radius: 26px 26px 0 0;
+      padding: 20px 18px calc(24px + var(--safe-bottom));
+      max-height: 88vh;
+      overflow-y: auto;
+      animation: slideSheet 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    @keyframes slideSheet {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    /* Toast */
+    #toast-container {
+      position: fixed;
+      top: calc(16px + var(--safe-top));
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 90%;
+      max-width: 420px;
+      pointer-events: none;
+    }
+    .toast {
+      background: rgba(32, 20, 58, 0.96);
+      border: 1px solid var(--purple-main);
+      color: #fff;
+      padding: 11px 16px;
+      border-radius: 16px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: toastIn 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(-16px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Confetti Canvas */
+    #confetti-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1500;
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .badge-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(16, 9, 31, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      margin-bottom: 8px;
+    }
+    .badge-card.unlocked {
+      border-color: var(--gold);
+      background: rgba(255, 215, 139, 0.09);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Cosmic Stars -->
+  <div class="stars-bg" id="stars-bg"></div>
+  <canvas id="confetti-canvas"></canvas>
+  <div id="toast-container"></div>
+
+  <!-- Splash Screen -->
+  <div id="splash-screen">
+    <div class="splash-crown">👑</div>
+    <div class="splash-title">MALAK</div>
+    <div class="splash-sub">Every Small Step Takes You Closer to Your Dream ♡</div>
+  </div>
+
+  <!-- SVG Gradients -->
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#AD7BFF" />
+        <stop offset="50%" stop-color="#F19BDC" />
+        <stop offset="100%" stop-color="#8CE6CB" />
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <div class="app-shell">
+
+    <!-- ==================== PAGE 1: DASHBOARD ==================== -->
+    <section id="page-home" class="page-section active">
+      <!-- Profile Hero Banner -->
+      <div class="hero-header slide-up">
+        <div class="hero-top">
+          <div class="avatar-wrap">
+            <span class="crown-badge">👑</span>
+            <div class="avatar-circle">
+              <div class="avatar-inner">
+                <svg viewBox="0 0 100 100" width="60" height="60">
+                  <defs>
+                    <linearGradient id="hairGrad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stop-color="#2D1B4E"/>
+                      <stop offset="100%" stop-color="#120924"/>
+                    </linearGradient>
+                  </defs>
+                  <circle cx="50" cy="50" r="46" fill="#2A194B"/>
+                  <path d="M25 85 C25 55, 75 55, 75 85" fill="#9D72E8"/>
+                  <circle cx="50" cy="42" r="18" fill="#F9D5C5"/>
+                  <path d="M30 42 C30 20, 70 20, 70 42 C72 60, 66 74, 62 76 C64 56, 62 42, 50 38 C38 42, 36 56, 38 76 C34 74, 28 60, 30 42 Z" fill="url(#hairGrad)"/>
+                  <path d="M62 28 L72 22 L69 32 L76 35 L65 36 Z" fill="#F19BDC"/>
+                  <circle cx="65" cy="30" r="2.5" fill="#FFD78B"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="hero-info">
+            <div class="hero-name">ملك <span class="heart">♡</span></div>
+            <div class="hero-sub">طالبة تالتة ثانوي • <span id="today-date-str"></span></div>
+          </div>
+          <button class="icon-btn" onclick="switchTab('more')" title="الإعدادات والمزيد">⚙️</button>
+        </div>
+        <div class="hero-quote" id="daily-quote-box">
+          "أنتِ قادرة على تحقيق حلمك في كلية العلاج الطبيعي ♡"
+        </div>
+      </div>
+
+      <!-- Goals & Circular Progress -->
+      <div class="glass-card goals-card slide-up" style="animation-delay: 0.05s;">
+        <div class="progress-ring-box">
+          <svg viewBox="0 0 92 92">
+            <circle class="ring-bg" cx="46" cy="46" r="38"></circle>
+            <circle class="ring-fill" id="dash-ring-fill" cx="46" cy="46" r="38"></circle>
+          </svg>
+          <div class="ring-text">
+            <span class="ring-pct" id="dash-pct">0%</span>
+            <span class="ring-lbl">إنجاز اليوم</span>
+          </div>
+        </div>
+        <div class="goals-list">
+          <div class="goals-title">🎯 أهدافي نحو الحلم</div>
+          <div class="goal-item"><span class="goal-dot">✓</span> الاستعداد لامتحانات الثانوية</div>
+          <div class="goal-item"><span class="goal-dot">✓</span> تقوية المواد العلمية واللغات</div>
+          <div class="goal-item"><span class="goal-dot">♡</span> <strong style="color:var(--gold)">الالتحاق بكلية العلاج الطبيعي</strong></div>
+        </div>
+      </div>
+
+      <!-- Mini Stats Strip -->
+      <div class="stats-strip slide-up" style="animation-delay: 0.1s;">
+        <div class="mini-stat">
+          <span class="mini-stat-val" id="stat-tasks-done">0/0</span>
+          <span class="mini-stat-lbl">المهام</span>
+        </div>
+        <div class="mini-stat">
+          <span class="mini-stat-val" id="stat-lessons-cnt" style="color:var(--mint)">0</span>
+          <span class="mini-stat-lbl">دروس قادمة</span>
+        </div>
+        <div class="mini-stat">
+          <span class="mini-stat-val" id="stat-study-mins" style="color:var(--pink)">0د</span>
+          <span class="mini-stat-lbl">مذاكرة اليوم</span>
+        </div>
+        <div class="mini-stat">
+          <span class="mini-stat-val" id="stat-streak" style="color:var(--gold)">1 🔥</span>
+          <span class="mini-stat-lbl">أيام الإنجاز</span>
+        </div>
+      </div>
+
+      <!-- Lessons & Prayer Grid -->
+      <div class="grid-2 slide-up" style="animation-delay: 0.15s;">
+        <!-- Upcoming Lessons -->
+        <div class="glass-card" style="padding: 13px;">
+          <div class="card-hdr">
+            <span class="card-hdr-title">📅 الدروس القادمة</span>
+            <span style="font-size:0.75rem; color:var(--purple-main); cursor:pointer;" onclick="openModal('lesson-modal')">+ إضافة</span>
+          </div>
+          <div id="dash-lessons-list"></div>
+        </div>
+
+        <!-- Prayer Tracker -->
+        <div class="glass-card" style="padding: 13px;">
+          <div class="card-hdr">
+            <span class="card-hdr-title">🕌 متابعة الصلاة</span>
+            <span id="prayer-count-badge" style="font-size:0.72rem; color:var(--mint);">0/5</span>
+          </div>
+          <div class="prayer-hero">
+            <div style="font-size:0.72rem; color:var(--text-muted);">ورد القرآن اليوم</div>
+            <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin:4px 0;">
+              <button class="icon-btn" style="width:28px;height:28px;font-size:0.9rem;" onclick="changeQuran(-1)">-</button>
+              <span style="font-weight:800; color:var(--gold); font-size:0.95rem;"><span id="quran-pages">0</span> صفحة</span>
+              <button class="icon-btn" style="width:28px;height:28px;font-size:0.9rem;" onclick="changeQuran(1)">+</button>
+            </div>
+            <div class="prayer-pills" id="dash-prayer-pills"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Today's Tasks -->
+      <div class="glass-card tasks-card slide-up" style="animation-delay: 0.2s;">
+        <div class="card-hdr">
+          <span class="card-hdr-title">✅ مهامي اليوم</span>
+          <button class="add-pill-btn" onclick="openTaskModal()">+ إضافة مهمة</button>
+        </div>
+
+        <div class="chips-row" id="task-filters">
+          <button class="chip active" data-filter="today" onclick="setTaskFilter('today', this)">اليوم</button>
+          <button class="chip" data-filter="all" onclick="setTaskFilter('all', this)">الكل</button>
+          <button class="chip" data-filter="pending" onclick="setTaskFilter('pending', this)">قيد التنفيذ</button>
+          <button class="chip" data-filter="done" onclick="setTaskFilter('done', this)">المكتملة</button>
+        </div>
+
+        <div id="dash-tasks-list"></div>
+      </div>
+
+      <!-- Bottom Row: Weekly Performance & Smart Advice -->
+      <div class="grid-2 slide-up" style="animation-delay: 0.25s;">
+        <div class="glass-card" style="padding: 13px;" onclick="switchTab('analytics')">
+          <div class="card-hdr" style="margin-bottom:4px;">
+            <span class="card-hdr-title" style="font-size:0.82rem;">📊 تحليل الأداء</span>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div class="bar-chart-mini" style="flex:1; margin-left:10px;" id="mini-bars">
+              <div class="bar-col" style="height:45%"></div>
+              <div class="bar-col" style="height:68%"></div>
+              <div class="bar-col" style="height:55%"></div>
+              <div class="bar-col" style="height:82%"></div>
+              <div class="bar-col" style="height:92%"></div>
+            </div>
+            <div style="text-align:center;">
+              <div id="weekly-score-val" style="font-size:1.15rem; font-weight:800; color:var(--mint);">85%</div>
+              <div style="font-size:0.65rem; color:var(--text-muted);">مستوى الأسبوع</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card advice-box" style="padding: 13px;">
+          <div class="card-hdr" style="margin-bottom:4px;">
+            <span class="card-hdr-title" style="font-size:0.82rem;">💡 نصيحة لكِ</span>
+          </div>
+          <p class="advice-text" id="smart-tip-text">
+            حاولي أخذ قسط كافٍ من النوم، فتركيزك أفضل وأداؤك أعلى ♡
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PAGE 2: ANALYTICS & EXAMS ==================== -->
+    <section id="page-analytics" class="page-section">
+      <div class="section-title">
+        <span>📊 تحليل الأداء والامتحانات</span>
+        <button class="add-pill-btn" onclick="openModal('grade-modal')">+ درجة جديدة</button>
+      </div>
+
+      <!-- Weakness Alert Box -->
+      <div class="glass-card" id="weakness-alert-card" style="margin-bottom:14px; border-color: rgba(241, 155, 220, 0.4);">
+        <div style="font-weight:700; color:var(--pink); margin-bottom:4px;">🧠 التقييم الذكي للمواد</div>
+        <p id="weakness-analysis-text" style="font-size:0.85rem; line-height:1.55; color:var(--text-main);"></p>
+      </div>
+
+      <!-- Subject Grades -->
+      <div class="glass-card" style="margin-bottom:14px;">
+        <div class="card-hdr">
+          <span>📚 متوسط درجات المواد</span>
+          <span id="overall-avg-badge" style="color:var(--gold); font-weight:800;">0%</span>
+        </div>
+        <div id="subjects-bars-list"></div>
+      </div>
+
+      <!-- Upcoming Exams -->
+      <div class="glass-card" style="margin-bottom:14px;">
+        <div class="card-hdr">
+          <span>📝 الامتحانات القادمة</span>
+          <button class="btn-outline" style="padding:4px 10px; font-size:0.75rem;" onclick="openModal('exam-modal')">+ امتحان</button>
+        </div>
+        <div id="exams-list"></div>
+      </div>
+
+      <!-- Mistakes Notebook -->
+      <div class="glass-card">
+        <div class="card-hdr">
+          <span>📓 دفتر الأخطاء الذكي</span>
+          <button class="btn-outline" style="padding:4px 10px; font-size:0.75rem;" onclick="openModal('mistake-modal')">+ تسجيل خطأ</button>
+        </div>
+        <p style="font-size:0.76rem; color:var(--text-muted); margin-bottom:10px;">
+          كل سؤال بتغلطي فيه النهارده هو درجة مضمونة في امتحان آخر السنة ♡
+        </p>
+        <div id="mistakes-list"></div>
+      </div>
+    </section>
+
+    <!-- ==================== PAGE 3: REWARDS & DREAM TRACKER ==================== -->
+    <section id="page-rewards" class="page-section">
+      <div class="section-title">
+        <span>🏆 المكافآت وحلم العلاج الطبيعي</span>
+      </div>
+
+      <!-- Dream Tracker Card -->
+      <div class="glass-card" style="margin-bottom:14px; background: linear-gradient(135deg, rgba(46, 26, 84, 0.9), rgba(27, 18, 48, 0.9)); border-color: var(--gold);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <div>
+            <div style="font-size:0.78rem; color:var(--gold);">الهدف الأسمى</div>
+            <div style="font-size:1.15rem; font-weight:800;">كلية العلاج الطبيعي 🩺♡</div>
+          </div>
+          <button class="btn-outline" style="font-size:0.75rem;" onclick="openModal('dream-modal')">تعديل</button>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-bottom:12px;">
+          <div style="flex:1; background:rgba(16,9,31,0.6); padding:10px; border-radius:14px; text-align:center;">
+            <div id="dream-days-left" style="font-size:1.4rem; font-weight:800; color:var(--pink);">--</div>
+            <div style="font-size:0.72rem; color:var(--text-muted);">يوم متبقي على الامتحانات</div>
+          </div>
+          <div style="flex:1; background:rgba(16,9,31,0.6); padding:10px; border-radius:14px; text-align:center;">
+            <div id="total-points-display" style="font-size:1.4rem; font-weight:800; color:var(--gold);">0</div>
+            <div style="font-size:0.72rem; color:var(--text-muted);">نقاط التميز ✨</div>
+          </div>
+        </div>
+
+        <div style="background:rgba(255,255,255,0.05); padding:10px 12px; border-radius:12px; font-size:0.84rem; line-height:1.5; color:var(--text-main);">
+          💌 <strong>رسالتكِ للمستقبل:</strong> <span id="dream-letter-text">أهلاً دكتورة ملك.. فخورة بكل ساعة تعب ومذاكرة وصلتني لمكاني النهارده!</span>
+        </div>
+      </div>
+
+      <!-- Level Progress -->
+      <div class="glass-card" style="margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span style="font-weight:700;">المستوى الحالي: <span id="user-level-name" style="color:var(--mint);">بداية الرحلة 🌱</span></span>
+          <span id="level-next-pts" style="font-size:0.78rem; color:var(--text-muted);">0 / 100 نقطة</span>
+        </div>
+        <div style="height:10px; background:rgba(255,255,255,0.08); border-radius:10px; overflow:hidden;">
+          <div id="level-progress-bar" style="height:100%; width:10%; background:linear-gradient(90deg, var(--purple-main), var(--pink), var(--gold)); transition: width 0.5s ease;"></div>
+        </div>
+      </div>
+
+      <!-- Achievements Badges -->
+      <div class="glass-card">
+        <div class="card-hdr"><span>🎖️ الأوسمة والإنجازات</span></div>
+        <div id="badges-list"></div>
+      </div>
+    </section>
+
+    <!-- ==================== PAGE 4: FOCUS MODE (POMODORO) ==================== -->
+    <section id="page-focus" class="page-section">
+      <div class="section-title">
+        <span>⏳ وضع المذاكرة المركز</span>
+        <span style="font-size:0.8rem; color:var(--mint);">اليوم: <strong id="focus-today-total">0</strong> دقيقة</span>
+      </div>
+
+      <div class="glass-card" style="text-align:center; margin-bottom:14px;">
+        <div class="chips-row" style="justify-content:center; margin-bottom:4px;">
+          <button class="chip active" id="mode-25" onclick="setPomoMode(25, 'جلسة تركيز 25د', this)">25 دقيقة</button>
+          <button class="chip" id="mode-50" onclick="setPomoMode(50, 'جلسة عميقة 50د', this)">50 دقيقة</button>
+          <button class="chip" id="mode-5" onclick="setPomoMode(5, 'استراحة قصيرة 5د', this)">استراحة 5د</button>
+        </div>
+
+        <div class="pomo-circle">
+          <svg viewBox="0 0 210 210">
+            <circle class="ring-bg" cx="105" cy="105" r="92" stroke-width="10"></circle>
+            <circle class="ring-fill" id="pomo-ring" cx="105" cy="105" r="92" stroke-width="10" style="stroke-dasharray: 578; stroke-dashoffset: 0;"></circle>
+          </svg>
+          <div class="pomo-time">
+            <div class="pomo-digits" id="pomo-display">25:00</div>
+            <div class="pomo-mode-lbl" id="pomo-label">جلسة تركيز 25د</div>
+          </div>
+        </div>
+
+        <div class="form-group" style="max-width:260px; margin:0 auto 12px;">
+          <select id="pomo-subject" class="form-control" style="text-align:center;">
+            <option value="أحياء">🧬 أحياء</option>
+            <option value="كيمياء">⚗️ كيمياء</option>
+            <option value="فيزياء">⚡ فيزياء</option>
+            <option value="لغة عربية">📖 لغة عربية</option>
+            <option value="لغة إنجليزية">🌍 لغة إنجليزية</option>
+            <option value="جيولوجيا">🪨 جيولوجيا</option>
+          </select>
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:center; margin-bottom:12px;">
+          <button class="btn-primary" id="pomo-start-btn" onclick="togglePomo()" style="max-width:160px;">▶ ابدأ المذاكرة</button>
+          <button class="btn-outline" onclick="resetPomo()">↺ إعادة</button>
+          <button class="btn-outline" id="rain-btn" onclick="toggleRainSound()" title="صوت مطر هادئ للتركيز">🌧️</button>
+        </div>
+
+        <button class="btn-outline" style="width:100%; font-size:0.78rem;" onclick="openModal('manual-study-modal')">+ تسجيل مدة مذاكرة يدوياً</button>
+      </div>
+
+      <div class="glass-card">
+        <div class="card-hdr"><span>📜 سجل جلسات اليوم</span></div>
+        <div id="study-sessions-list"></div>
+      </div>
+    </section>
+
+    <!-- ==================== PAGE 5: MORE (AI ASSISTANT, LESSONS, BACKUP) ==================== -->
+    <section id="page-more" class="page-section">
+      <div class="section-title">
+        <span>✨ المساعد الذكي والإدارة</span>
+      </div>
+
+      <!-- Local Smart AI Assistant -->
+      <div class="glass-card" style="margin-bottom:14px;">
+        <div class="card-hdr">
+          <span>🧠 مساعد ملك الذكي</span>
+          <span style="font-size:0.7rem; color:var(--mint);">يعمل بدون إنترنت ⚡</span>
+        </div>
+
+        <div class="chips-row">
+          <button class="chip" onclick="askQuickAI('أبدأ بإيه النهارده؟')">أبدأ بإيه النهارده؟</button>
+          <button class="chip" onclick="askQuickAI('إيه المادة اللي محتاجة تركيز؟')">المادة الأضعف؟</button>
+          <button class="chip" onclick="askQuickAI('اعمل لي خطة مذاكرة سريعة')">خطة سريعة</button>
+          <button class="chip" onclick="askQuickAI('شجعني بكلمة حلوة')">رسالة تشجيع ♡</button>
+        </div>
+
+        <div class="chat-box" id="ai-chat-box">
+          <div class="msg msg-ai">
+            أهلاً يا دكتورة ملك ♡ أنا مساعدك الشخصي! اسأليني عن ترتيب مهامك النهارده، أو تحليل درجاتك، أو خطة لمذاكرة المواد المتراكمة.
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="ai-input" class="form-control" placeholder="اكتبي سؤالك هنا... مثلاً: عندي كيمياء وفيزياء أبدأ بإيه؟" onkeypress="if(event.key==='Enter') sendAIMessage()">
+          <button class="add-pill-btn" style="border-radius:13px; padding:0 16px;" onclick="sendAIMessage()">إرسال</button>
+        </div>
+      </div>
+
+      <!-- Full Lessons Schedule Management -->
+      <div class="glass-card" style="margin-bottom:14px;">
+        <div class="card-hdr">
+          <span>📅 جدول الدروس الكامل</span>
+          <button class="add-pill-btn" onclick="openModal('lesson-modal')">+ درس جديد</button>
+        </div>
+        <div id="full-lessons-list"></div>
+      </div>
+
+      <!-- Data Backup & Privacy -->
+      <div class="glass-card">
+        <div class="card-hdr"><span>🔒 النسخ الاحتياطي والخصوصية</span></div>
+        <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:12px; line-height:1.5;">
+          جميع بياناتك محفوظة بأمان على جهازك فقط. يُفضل حفظ نسخة احتياطية دورياً.
+        </p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn-outline" style="flex:1;" onclick="exportBackup()">📤 تصدير نسخة JSON</button>
+          <label class="btn-outline" style="flex:1; text-align:center; cursor:pointer;">
+            📥 استيراد نسخة
+            <input type="file" accept=".json" style="display:none;" onchange="importBackup(event)">
+          </label>
+        </div>
+        <button class="btn-outline" style="width:100%; margin-top:10px; color:#ff7b9c; border-color:rgba(255,123,156,0.3);" onclick="resetAllData()">
+          🗑️ مسح جميع البيانات وإعادة الضبط
+        </button>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-tab="home" onclick="switchTab('home')">
+      <span class="nav-icon">🏠</span>
+      <span>الرئيسية</span>
+    </button>
+    <button class="nav-item" data-tab="analytics" onclick="switchTab('analytics')">
+      <span class="nav-icon">📊</span>
+      <span>إحصائيات</span>
+    </button>
+    <button class="nav-item" data-tab="rewards" onclick="switchTab('rewards')">
+      <span class="nav-icon">🏆</span>
+      <span>مكافآت</span>
+    </button>
+    <button class="nav-item" data-tab="focus" onclick="switchTab('focus')">
+      <span class="nav-icon">📖</span>
+      <span>المذاكرة</span>
+    </button>
+    <button class="nav-item" data-tab="more" onclick="switchTab('more')">
+      <span class="nav-icon">•••</span>
+      <span>المزيد</span>
+    </button>
+  </nav>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- Task Modal -->
+  <div class="modal-backdrop" id="task-modal" onclick="if(event.target===this) closeModal('task-modal')">
+    <div class="modal-sheet">
+      <div class="section-title">
+        <span id="task-modal-title">✨ إضافة مهمة جديدة</span>
+        <button class="mini-action" onclick="closeModal('task-modal')">✕</button>
+      </div>
+      <input type="hidden" id="edit-task-id">
+      <div class="form-group">
+        <label class="form-label">اسم المهمة *</label>
+        <input type="text" id="t-title" class="form-control" placeholder="مثال: مراجعة الفصل الأول في الكيمياء">
+      </div>
+      <div class="grid-2" style="margin-bottom:0;">
+        <div class="form-group">
+          <label class="form-label">المادة</label>
+          <select id="t-subject" class="form-control">
+            <option value="أحياء">أحياء</option>
+            <option value="كيمياء">كيمياء</option>
+            <option value="فيزياء">فيزياء</option>
+            <option value="عربي">لغة عربية</option>
+            <option value="إنجليزي">لغة إنجليزية</option>
+            <option value="جيولوجيا">جيولوجيا</option>
+            <option value="عام">عام / حياة يومية</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">الأولوية</label>
+          <select id="t-priority" class="form-control">
+            <option value="عاجلة">🔥 عاجلة</option>
+            <option value="مهمة" selected>⭐ مهمة</option>
+            <option value="عادية">🌿 عادية</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-bottom:0;">
+        <div class="form-group">
+          <label class="form-label">التاريخ</label>
+          <input type="date" id="t-date" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">المدة المتوقعة (دقيقة)</label>
+          <input type="number" id="t-duration" class="form-control" value="45" min="5">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ملاحظات إضافية</label>
+        <input type="text" id="t-desc" class="form-control" placeholder="تفاصيل أو رقم الصفحة...">
+      </div>
+      <button class="btn-primary" onclick="saveTask()">حفظ المهمة ♡</button>
+    </div>
+  </div>
+
+  <!-- Lesson Modal -->
+  <div class="modal-backdrop" id="lesson-modal" onclick="if(event.target===this) closeModal('lesson-modal')">
+    <div class="modal-sheet">
+      <div class="section-title">
+        <span>📅 إضافة موعد درس</span>
+        <button class="mini-action" onclick="closeModal('lesson-modal')">✕</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">المادة / اسم الدرس *</label>
+        <input type="text" id="l-title" class="form-control" placeholder="مثال: درس الفيزياء">
+      </div>
+      <div class="grid-2" style="margin-bottom:0;">
+        <div class="form-group">
+          <label class="form-label">اسم المدرس</label>
+          <input type="text" id="l-teacher" class="form-control" placeholder="أ/ ...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">المكان / السنتر</label>
+          <input type="text" id="l-place" class="form-control" placeholder="سنتر النور / أونلاين">
+        </div>
+      </div>
+      <div class="grid-2" style="margin-bottom:0;">
+        <div class="form-group">
+          <label class="form-label">التاريخ *</label>
+          <input type="date" id="l-date" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">الوقت *</label>
+          <input type="time" id="l-time" class="form-control" value="16:00">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">واجب أو ملاحظات</label>
+        <input type="text" id="l-notes" class="form-control" placeholder="تسميع الفصل الثاني">
+      </div>
+      <button class="btn-primary" onclick="saveLesson()">حفظ الدرس</button>
+    </div>
+  </div>
+
+  <!-- Grade Modal -->
+  <div class="modal-backdrop" id="grade-modal" onclick="if(event.target===this) closeModal('grade-modal')">
+    <div class="modal-sheet">
+      <div class="section-title">
+        <span>📈 تسجيل درجة اختبار</span>
+        <button class="mini-action" onclick="closeModal('grade-modal')">✕</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">المادة</label>
+        <select id="g-subject" class="form-control">
+          <option value="أحياء">أحياء</option>
+          <option value="كيمياء">كيمياء</option>
+          <option value="فيزياء">فيزياء</option>
+          <option value="عربي">عربي</option>
+          <option value="إنجليزي">إنجليزي</option>
+          <option value="جيولوجيا">جيولوجيا</option>
+        </select>
+      </div>
+      <div class="grid-2" style="margin-bottom:0;">
+        <div class="form-group">
+          <label class="form-label">الدرجة التي حصلتِ عليها</label>
+          <input type="number" id="g-score" class="form-control" placeholder="45">
+        </div>
+        <div class="form-group">
+          <label class="form-label">الدرجة النهائية</label>
+          <input type="number" id="g-total" class="form-control" value="50">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">اسم الاختبار / الجزئية</label>
+        <input type="text" id="g-title" class="form-control" placeholder="شامل الباب الأول">
+      </div>
+      <button class="btn-primary" onclick="saveGrade()">إضافة للتحليل</button>
+    </div>
+  </div>
+
+  <!-- Exam Modal -->
+  <div class="modal-backdrop" id="exam-modal" onclick="if(event.target===this) closeModal('exam-modal')">
+    <div class="modal-sheet">
+      <div class="section-title">
+        <span>📝 إضافة امتحان قادم</span>
+        <button class="mini-action" onclick="closeModal('exam-modal')">✕</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">المادة</label>
+        <input type="text" id="e-subject" class="form-control" placeholder="أحياء - الدعامة والحركة">
+      </div>
+      <div class="form-group">
+        <label class="form-label">تاريخ الامتحان</label>
+        <input type="date" id="e-date" class="form-control">
+      </div>
+      <button class="btn-primary" onclick="saveExam()">حفظ الامتحان</button>
+    </div>
+  </div>
+
+  <!-- Mistake Modal -->
+  <div class="modal-backdrop" id="mistake-modal" onclick="if(event.target===this) closeModal('mistake-modal')">
+    <div class="modal-sheet">
+      <div class="section-title">
+        <span>📓 تسجيل سؤال في دفتر الأخطاء</span>
+        <button class="mini-action" onclick="closeModal('mistake-modal')">✕</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">المادة</label>
+        <select id="m-subject" class="form-control">
+          <option value="فيزياء">فيزياء</option>
+          <option value="كيمياء">كيمياء</option>
+          <option value="أحياء">أحياء</option>
+          <option value="عربي">عربي</option>
+          <option value="إنجليزي">إنجليزي</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">السؤال أو الفكرة</label>
+        <input type="text" id="m-question" class="form-control" placeholder="مسألة قانون كيرشوف الثاني">
+      </div>
+      <div class="form-group">
+        <label class="form-label">سبب الخطأ</label>
+        <input type="text" id="m-reason" class="form-control" placeholder="تسرع في إشارة البطارية">
+      </div>
+      <div class="form-group">
+        <label class="form-label">الحل الصحيح / القاعدة</label>
+        <input type="text" id="m-solution" class="form-control" placeholder="نطبق مسار مغلق مع تحديد اتجاه التيار أولاً">
+      </div>
+      <button class="btn-primary" onclick="saveMistake()">حفظ في الدفتر</button>
+    </div>
+  </div>
+
+  <!-- Manual Study Modal -->
+  <div class="modal-backdrop" id="manual-study-modal" onclick="if(event.target===this) closeModal('manual-study-modal')">
+    <div class="modal-sheet">
+      <div class="section-title">
+        <span>⏱️ تسجيل مدة مذاكرة يدوياً</span>
+        <button class="mini-action" onclick="closeModal('manual-study-modal')">✕</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">المادة</label>
+        <select id="ms-subject" class="form-control">
+          <option value="أحياء">أحياء</option>
+          <option value="كيمياء">كيمياء</option>
+          <option value="فيزياء">فيزياء</option>
+          <option value="عربي">عربي</option>
+          <option value="إنجليزي">إنجليزي</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">المدة بالدقائق</label>
+        <input type="number" id="ms-mins" class="form-control" value="40" min="5">
+      </div>
+      <button class="btn-primary" onclick="saveManualStudy()">تسجيل الجلسة</button>
+    </div>
+  </div>
+
+  <!-- Dream Modal -->
+  <div class="modal-backdrop" id="dream-modal" onclick="if(event.target===this) closeModal('dream-modal')">
+    <div class="modal-sheet">
+      <div class="section-title">
+        <span>🩺 إعدادات حلم العلاج الطبيعي</span>
+        <button class="mini-action" onclick="closeModal('dream-modal')">✕</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">تاريخ امتحانات الثانوية العامة</label>
+        <input type="date" id="d-date" class="form-control">
+      </div>
+      <div class="form-group">
+        <label class="form-label">رسالتك لنفسك في المستقبل</label>
+        <textarea id="d-letter" class="form-control" rows="3"></textarea>
+      </div>
+      <button class="btn-primary" onclick="saveDream()">حفظ التعديلات ♡</button>
+    </div>
+  </div>
+
+  <script>
+    // ==================== SERVICE WORKER REGISTRATION ====================
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+
+    // ==================== STATE & INITIAL DATA ====================
+    const STORAGE_KEY = 'malak_companion_v1';
+    const todayISO = () => new Date().toISOString().split('T')[0];
+
+    const MOTIVATIONAL_QUOTES = [
+      "كل صفحة بتذاكريها النهارده بتقربك خطوة من البالطو الأبيض وكلية العلاج الطبيعي ♡",
+      "تعب النهارده هو فخر بكرة يا دكتورة ملك ✨",
+      "مش لازم تكوني مثالية، المهم تكملي وما توقفيش ♡",
+      "كل خطوة صغيرة ليها قيمة كبيرة في رحلتك للنجاح 🌟",
+      "مستقبلك بيتبني بعادات صغيرة بتعمليها كل يوم بتركيز 💪",
+      "ثقي في نفسك وفي تعبك.. ربنا لا يضيع أجر من أحسن عملاً ♡",
+      "أنتِ أقوى من أي ضغط، وكل مادة صعبة بتسهل بالاستمرار ✨"
+    ];
+
+    const defaultData = {
+      tasks: [
+        { id: 't1', title: 'مراجعة الفصل الأول في الكيمياء', subject: 'كيمياء', priority: 'عاجلة', date: todayISO(), duration: 45, desc: 'العناصر الانتقالية', done: true, rewarded: true },
+        { id: 't2', title: 'حل 20 سؤال في الفيزياء', subject: 'فيزياء', priority: 'مهمة', date: todayISO(), duration: 50, desc: 'قانون أوم للدوائر المغلقة', done: true, rewarded: true },
+        { id: 't3', title: 'مذاكرة الدعامة في الإنسان - أحياء', subject: 'أحياء', priority: 'مهمة', date: todayISO(), duration: 60, desc: 'رسم الفقرة العظمية', done: false, rewarded: false },
+        { id: 't4', title: 'حل قطعة نحو وبلاغة', subject: 'عربي', priority: 'عادية', date: todayISO(), duration: 30, desc: 'كتاب الامتحان', done: false, rewarded: false }
+      ],
+      lessons: [
+        { id: 'l1', title: 'الفيزياء', teacher: 'أ/ محمود', place: 'سنتر الأوائل', date: todayISO(), time: '16:00', notes: 'امتحان قصير على الفصل الأول' },
+        { id: 'l2', title: 'الكيمياء', teacher: 'أ/ سارة', place: 'أونلاين', date: todayISO(), time: '19:00', notes: 'مراجعة الباب الأول' }
+      ],
+      prayers: {
+        [todayISO()]: { fajr: true, dhuhr: true, asr: false, maghrib: false, isha: false, quran: 4 }
+      },
+      study: [
+        { id: 's1', date: todayISO(), subject: 'كيمياء', mins: 50 },
+        { id: 's2', date: todayISO(), subject: 'أحياء', mins: 25 }
+      ],
+      grades: [
+        { id: 'g1', subject: 'أحياء', title: 'اختبار الدعامة', score: 45, total: 50 },
+        { id: 'g2', subject: 'كيمياء', title: 'شامل الباب الأول', score: 38, total: 50 },
+        { id: 'g3', subject: 'فيزياء', title: 'كويز التيار الكهربي', score: 31, total: 50 },
+        { id: 'g4', subject: 'عربي', title: 'نحو الوحدة الأولى', score: 43, total: 50 }
+      ],
+      exams: [
+        { id: 'e1', subject: 'شامل أحياء (الفصل الأول)', date: '2026-11-20' },
+        { id: 'e2', subject: 'امتحان فيزياء كهربية', date: '2026-11-24' }
+      ],
+      mistakes: [
+        { id: 'm1', subject: 'فيزياء', question: 'حساب المقاومة المكافئة عند غلق المفتاح', reason: 'عدم ملاحظة السلك الفارغ المتصل على التوازي', solution: 'السلك الفارغ يلغي المقاومة المتصلة معه على التوازي' }
+      ],
+      dream: {
+        examDate: '2027-06-15',
+        letter: 'أهلاً دكتورة ملك.. فخورة بكل ساعة تعب ومذاكرة وصلتني لكلية العلاج الطبيعي ♡'
+      },
+      points: 35,
+      streak: 4,
+      lastActiveDate: todayISO()
+    };
+
+    let state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultData;
+    let currentTaskFilter = 'today';
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      renderAll();
+    }
+
+    // ==================== INITIALIZATION & STARS ====================
+    window.addEventListener('DOMContentLoaded', () => {
+      createStars();
+      setupDateAndQuote();
+      renderAll();
+
+      setTimeout(() => {
+        document.getElementById('splash-screen').classList.add('hidden');
+      }, 1300);
+    });
+
+    function createStars() {
+      const container = document.getElementById('stars-bg');
+      for (let i = 0; i < 42; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        const size = Math.random() * 2.5 + 1;
+        star.style.width = size + 'px';
+        star.style.height = size + 'px';
+        star.style.top = Math.random() * 100 + '%';
+        star.style.left = Math.random() * 100 + '%';
+        star.style.setProperty('--dur', (Math.random() * 3 + 2) + 's');
+        container.appendChild(star);
+      }
+    }
+
+    function setupDateAndQuote() {
+      const now = new Date();
+      const options = { weekday: 'long', day: 'numeric', month: 'long' };
+      document.getElementById('today-date-str').textContent = now.toLocaleDateString('ar-EG', options);
+
+      const dayIndex = Math.floor(now.getTime() / (1000 * 60 * 60 * 24));
+      const quote = MOTIVATIONAL_QUOTES[dayIndex % MOTIVATIONAL_QUOTES.length];
+      document.getElementById('daily-quote-box').textContent = `"${quote}"`;
+
+      document.getElementById('t-date').value = todayISO();
+      document.getElementById('l-date').value = todayISO();
+      document.getElementById('e-date').value = todayISO();
+    }
+
+    // ==================== NAVIGATION ====================
+    function switchTab(tabName) {
+      document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('page-' + tabName).classList.add('active');
+      document.querySelector(`.nav-item[data-tab="${tabName}"]`).classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function openModal(id) {
+      if (id === 'dream-modal') {
+        document.getElementById('d-date').value = state.dream.examDate || '2027-06-15';
+        document.getElementById('d-letter').value = state.dream.letter || '';
+      }
+      document.getElementById(id).classList.add('open');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('open');
+    }
+
+    function showToast(msg, icon = '✨') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-10px)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 2600);
+    }
+
+    // ==================== CONFETTI ANIMATION ====================
+    function fireConfetti() {
+      const canvas = document.getElementById('confetti-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const colors = ['#AD7BFF', '#F19BDC', '#8CE6CB', '#FFD78B', '#FFFFFF'];
+      const particles = Array.from({ length: 65 }, () => ({
+        x: canvas.width / 2 + (Math.random() - 0.5) * 140,
+        y: canvas.height * 0.45,
+        vx: (Math.random() - 0.5) * 11,
+        vy: Math.random() * -11 - 3,
+        size: Math.random() * 7 + 4,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        rot: Math.random() * 360,
+        vRot: (Math.random() - 0.5) * 10
+      }));
+
+      let frame = 0;
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.32;
+          p.rot += p.vRot;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rot * Math.PI) / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+          ctx.restore();
+        });
+        frame++;
+        if (frame < 75) requestAnimationFrame(animate);
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      animate();
+    }
+
+    // ==================== TASKS MANAGEMENT ====================
+    function openTaskModal(taskId = null) {
+      if (taskId) {
+        const t = state.tasks.find(x => x.id === taskId);
+        document.getElementById('task-modal-title').textContent = '✏️ تعديل المهمة';
+        document.getElementById('edit-task-id').value = t.id;
+        document.getElementById('t-title').value = t.title;
+        document.getElementById('t-subject').value = t.subject;
+        document.getElementById('t-priority').value = t.priority;
+        document.getElementById('t-date').value = t.date;
+        document.getElementById('t-duration').value = t.duration;
+        document.getElementById('t-desc').value = t.desc || '';
+      } else {
+        document.getElementById('task-modal-title').textContent = '✨ إضافة مهمة جديدة';
+        document.getElementById('edit-task-id').value = '';
+        document.getElementById('t-title').value = '';
+        document.getElementById('t-desc').value = '';
+        document.getElementById('t-date').value = todayISO();
+      }
+      openModal('task-modal');
+    }
+
+    function saveTask() {
+      const title = document.getElementById('t-title').value.trim();
+      if (!title) {
+        showToast('اكتبي اسم المهمة الأول يا ملك!', '⚠️');
+        return;
+      }
+      const editId = document.getElementById('edit-task-id').value;
+      const taskObj = {
+        id: editId || 't_' + Date.now(),
+        title,
+        subject: document.getElementById('t-subject').value,
+        priority: document.getElementById('t-priority').value,
+        date: document.getElementById('t-date').value || todayISO(),
+        duration: parseInt(document.getElementById('t-duration').value) || 30,
+        desc: document.getElementById('t-desc').value.trim(),
+        done: false,
+        rewarded: false
+      };
+
+      if (editId) {
+        const idx = state.tasks.findIndex(x => x.id === editId);
+        taskObj.done = state.tasks[idx].done;
+        taskObj.rewarded = state.tasks[idx].rewarded;
+        state.tasks[idx] = taskObj;
+        showToast('تم تعديل المهمة بنجاح', '✏️');
+      } else {
+        state.tasks.unshift(taskObj);
+        showToast('تمت إضافة المهمة بنجاح!', '✅');
+      }
+
+      closeModal('task-modal');
+      saveState();
+    }
+
+    function toggleTask(id, el) {
+      const task = state.tasks.find(t => t.id === id);
+      if (!task) return;
+      task.done = !task.done;
+
+      if (task.done) {
+        if (el) el.classList.add('pop-anim');
+        fireConfetti();
+        if (!task.rewarded) {
+          task.rewarded = true;
+          state.points += 10;
+          showToast('عاش يا بطلة! +10 نقاط تميز 🎉', '🌟');
+        } else {
+          showToast('تم إنجاز المهمة بنجاح ♡', '✅');
+        }
+      }
+      saveState();
+    }
+
+    function deleteTask(id) {
+      state.tasks = state.tasks.filter(t => t.id !== id);
+      showToast('تم حذف المهمة', '🗑️');
+      saveState();
+    }
+
+    function setTaskFilter(filter, btn) {
+      currentTaskFilter = filter;
+      document.querySelectorAll('#task-filters .chip').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      renderTasks();
+    }
+
+    function renderTasks() {
+      const list = document.getElementById('dash-tasks-list');
+      const today = todayISO();
+      let filtered = [...state.tasks];
+
+      if (currentTaskFilter === 'today') filtered = filtered.filter(t => t.date === today);
+      else if (currentTaskFilter === 'pending') filtered = filtered.filter(t => !t.done);
+      else if (currentTaskFilter === 'done') filtered = filtered.filter(t => t.done);
+
+      const prioOrder = { 'عاجلة': 1, 'مهمة': 2, 'عادية': 3 };
+      filtered.sort((a, b) => (a.done - b.done) || (prioOrder[a.priority] - prioOrder[b.priority]));
+
+      if (filtered.length === 0) {
+        list.innerHTML = `<div style="text-align:center; padding:18px; color:var(--text-muted); font-size:0.84rem;">لا توجد مهام في هذا القسم حالياً 🌸</div>`;
+        return;
+      }
+
+      list.innerHTML = filtered.map(t => {
+        const prioClass = t.priority === 'عاجلة' ? 'tag-urgent' : (t.priority === 'مهمة' ? 'tag-imp' : 'tag-norm');
+        return `
+          <div class="task-item ${t.done ? 'completed' : ''}">
+            <div class="task-check" onclick="toggleTask('${t.id}', this)">✓</div>
+            <div class="task-body">
+              <div class="task-title">${t.title}</div>
+              <div class="task-meta">
+                <span class="tag tag-subj">${t.subject}</span>
+                <span class="tag ${prioClass}">${t.priority}</span>
+                <span>⏱️ ${t.duration}د</span>
+                ${t.desc ? `<span>• ${t.desc}</span>` : ''}
+              </div>
+            </div>
+            <div class="task-actions">
+              <button class="mini-action" onclick="openTaskModal('${t.id}')" title="تعديل">✏️</button>
+              <button class="mini-action" onclick="deleteTask('${t.id}')" title="حذف">🗑️</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ==================== LESSONS MANAGEMENT ====================
+    function saveLesson() {
+      const title = document.getElementById('l-title').value.trim();
+      const date = document.getElementById('l-date').value;
+      const time = document.getElementById('l-time').value;
+      if (!title || !date) {
+        showToast('أدخلي اسم المادة والتاريخ من فضلك', '⚠️');
+        return;
+      }
+      state.lessons.push({
+        id: 'l_' + Date.now(),
+        title,
+        teacher: document.getElementById('l-teacher').value.trim(),
+        place: document.getElementById('l-place').value.trim(),
+        date,
+        time,
+        notes: document.getElementById('l-notes').value.trim()
+      });
+      closeModal('lesson-modal');
+      showToast('تمت إضافة موعد الدرس 📅', '✅');
+      saveState();
+    }
+
+    function deleteLesson(id) {
+      state.lessons = state.lessons.filter(l => l.id !== id);
+      showToast('تم حذف الدرس', '🗑️');
+      saveState();
+    }
+
+    function formatTime12(time24) {
+      if (!time24) return '';
+      const [h, m] = time24.split(':').map(Number);
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const h12 = h % 12 || 12;
+      return `${h12}:${String(m).padStart(2, '0')} ${ampm}`;
+    }
+
+    function renderLessons() {
+      const sorted = [...state.lessons].sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+      const upcoming = sorted.filter(l => l.date >= todayISO());
+      document.getElementById('stat-lessons-cnt').textContent = upcoming.length;
+
+      const dashBox = document.getElementById('dash-lessons-list');
+      if (upcoming.length === 0) {
+        dashBox.innerHTML = `<div style="font-size:0.76rem; color:var(--text-muted); padding:10px 0;">لا توجد دروس قادمة ✨</div>`;
+      } else {
+        dashBox.innerHTML = upcoming.slice(0, 2).map(l => `
+          <div class="lesson-mini">
+            <div class="lesson-mini-title">${l.title} - ${formatTime12(l.time)}</div>
+            <div class="lesson-mini-time">${l.date} ${l.place ? '• ' + l.place : ''}</div>
+          </div>
+        `).join('');
+      }
+
+      const fullBox = document.getElementById('full-lessons-list');
+      if (sorted.length === 0) {
+        fullBox.innerHTML = `<div style="text-align:center; color:var(--text-muted); font-size:0.84rem; padding:12px;">لم يتم إضافة دروس بعد</div>`;
+      } else {
+        fullBox.innerHTML = sorted.map(l => `
+          <div class="task-item">
+            <div class="task-body">
+              <div class="task-title">${l.title} ${l.teacher ? `(${l.teacher})` : ''}</div>
+              <div class="task-meta">
+                <span>📅 ${l.date}</span>
+                <span>⏰ ${formatTime12(l.time)}</span>
+                ${l.place ? `<span>📍 ${l.place}</span>` : ''}
+              </div>
+              ${l.notes ? `<div style="font-size:0.74rem; color:var(--gold); margin-top:3px;">📝 ${l.notes}</div>` : ''}
+            </div>
+            <button class="mini-action" onclick="deleteLesson('${l.id}')">🗑️</button>
+          </div>
+        `).join('');
+      }
+    }
+
+    // ==================== PRAYER & QURAN TRACKER ====================
+    const PRAYER_NAMES = [
+      { key: 'fajr', label: 'الفجر' },
+      { key: 'dhuhr', label: 'الظهر' },
+      { key: 'asr', label: 'العصر' },
+      { key: 'maghrib', label: 'المغرب' },
+      { key: 'isha', label: 'العشاء' }
+    ];
+
+    function getTodayPrayer() {
+      const today = todayISO();
+      if (!state.prayers[today]) {
+        state.prayers[today] = { fajr: false, dhuhr: false, asr: false, maghrib: false, isha: false, quran: 0 };
+      }
+      return state.prayers[today];
+    }
+
+    function togglePrayer(key) {
+      const p = getTodayPrayer();
+      p[key] = !p[key];
+      if (p[key]) showToast('تقبل الله طاعتك يا ملك 🤲', '🕌');
+      saveState();
+    }
+
+    function changeQuran(delta) {
+      const p = getTodayPrayer();
+      p.quran = Math.max(0, (p.quran || 0) + delta);
+      saveState();
+    }
+
+    function renderPrayers() {
+      const p = getTodayPrayer();
+      const doneCount = PRAYER_NAMES.filter(x => p[x.key]).length;
+      document.getElementById('prayer-count-badge').textContent = `${doneCount}/5`;
+      document.getElementById('quran-pages').textContent = p.quran || 0;
+
+      document.getElementById('dash-prayer-pills').innerHTML = PRAYER_NAMES.map(pr => `
+        <div class="prayer-pill ${p[pr.key] ? 'done' : ''}" onclick="togglePrayer('${pr.key}')">
+          ${p[pr.key] ? '✓' : '○'}<br>${pr.label}
+        </div>
+      `).join('');
+    }
+
+    // ==================== POMODORO FOCUS TIMER ====================
+    let pomoTotalSecs = 25 * 60;
+    let pomoRemainingSecs = 25 * 60;
+    let pomoInterval = null;
+    let pomoRunning = false;
+    let currentPomoMins = 25;
+
+    function setPomoMode(mins, label, btn) {
+      if (pomoRunning) togglePomo();
+      currentPomoMins = mins;
+      pomoTotalSecs = mins * 60;
+      pomoRemainingSecs = pomoTotalSecs;
+      document.getElementById('pomo-label').textContent = label;
+      document.querySelectorAll('#page-focus .chip').forEach(c => c.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      updatePomoDisplay();
+    }
+
+    function updatePomoDisplay() {
+      const m = Math.floor(pomoRemainingSecs / 60);
+      const s = pomoRemainingSecs % 60;
+      document.getElementById('pomo-display').textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+
+      const pct = (pomoTotalSecs - pomoRemainingSecs) / pomoTotalSecs;
+      const offset = 578 * pct;
+      document.getElementById('pomo-ring').style.strokeDashoffset = offset;
+    }
+
+    function togglePomo() {
+      const btn = document.getElementById('pomo-start-btn');
+      if (pomoRunning) {
+        clearInterval(pomoInterval);
+        pomoRunning = false;
+        btn.textContent = '▶ استكمال';
+      } else {
+        pomoRunning = true;
+        btn.textContent = '⏸ إيقاف مؤقت';
+        pomoInterval = setInterval(() => {
+          pomoRemainingSecs--;
+          updatePomoDisplay();
+          if (pomoRemainingSecs <= 0) {
+            clearInterval(pomoInterval);
+            pomoRunning = false;
+            btn.textContent = '▶ ابدأ المذاكرة';
+            completePomoSession();
+          }
+        }, 1000);
+      }
+    }
+
+    function resetPomo() {
+      if (pomoRunning) togglePomo();
+      pomoRemainingSecs = pomoTotalSecs;
+      updatePomoDisplay();
+    }
+
+    function completePomoSession() {
+      fireConfetti();
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+
+      if (currentPomoMins >= 15) {
+        const subject = document.getElementById('pomo-subject').value;
+        state.study.unshift({
+          id: 's_' + Date.now(),
+          date: todayISO(),
+          subject,
+          mins: currentPomoMins
+        });
+        state.points += 5;
+        showToast(`عاش يا ملك! أنهيتِ ${currentPomoMins} دقيقة (+5 نقاط) 🎉`, '⏳');
+        saveState();
+      } else {
+        showToast('انتهت الاستراحة! جاهزة نكمل؟ 💪', '☕');
+      }
+      resetPomo();
+    }
+
+    function saveManualStudy() {
+      const mins = parseInt(document.getElementById('ms-mins').value) || 30;
+      const subject = document.getElementById('ms-subject').value;
+      state.study.unshift({
+        id: 's_' + Date.now(),
+        date: todayISO(),
+        subject,
+        mins
+      });
+      state.points += 5;
+      closeModal('manual-study-modal');
+      showToast(`تم تسجيل ${mins} دقيقة مذاكرة (+5 نقاط)`, '📖');
+      saveState();
+    }
+
+    // Web Audio Gentle Rain Generator
+    let audioCtx = null, rainNode = null, rainPlaying = false;
+    function toggleRainSound() {
+      const btn = document.getElementById('rain-btn');
+      if (rainPlaying) {
+        if (rainNode) rainNode.disconnect();
+        rainPlaying = false;
+        btn.style.background = '';
+        showToast('تم إيقاف صوت المطر', '🔇');
+      } else {
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        const bufferSize = 2 * audioCtx.sampleRate;
+        const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
+
+        const whiteNoise = audioCtx.createBufferSource();
+        whiteNoise.buffer = noiseBuffer;
+        whiteNoise.loop = true;
+
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 420;
+
+        const gain = audioCtx.createGain();
+        gain.gain.value = 0.08;
+
+        whiteNoise.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtx.destination);
+        whiteNoise.start(0);
+        rainNode = gain;
+        rainPlaying = true;
+        btn.style.background = 'rgba(173, 123, 255, 0.35)';
+        showToast('تم تشغيل صوت مطر هادئ للتركيز 🌧️', '🎧');
+      }
+    }
+
+    function renderStudy() {
+      const todaySessions = state.study.filter(s => s.date === todayISO());
+      const totalMins = todaySessions.reduce((acc, s) => acc + s.mins, 0);
+      document.getElementById('stat-study-mins').textContent = totalMins + 'د';
+      document.getElementById('focus-today-total').textContent = totalMins;
+
+      const list = document.getElementById('study-sessions-list');
+      if (todaySessions.length === 0) {
+        list.innerHTML = `<div style="text-align:center; color:var(--text-muted); font-size:0.82rem; padding:10px;">ابدئي أول جلسة تركيز النهارده 🚀</div>`;
+      } else {
+        list.innerHTML = todaySessions.map(s => `
+          <div class="task-item">
+            <div class="task-body">
+              <div class="task-title">مذاكرة ${s.subject}</div>
+              <div class="task-meta"><span>⏱️ ${s.mins} دقيقة</span><span>• مكتملة ✓</span></div>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    // ==================== ANALYTICS, GRADES, EXAMS & MISTAKES ====================
+    function saveGrade() {
+      const subject = document.getElementById('g-subject').value;
+      const score = parseFloat(document.getElementById('g-score').value);
+      const total = parseFloat(document.getElementById('g-total').value);
+      const title = document.getElementById('g-title').value.trim() || 'اختبار';
+      if (isNaN(score) || isNaN(total) || total <= 0) {
+        showToast('أدخلي الدرجة بشكل صحيح', '⚠️');
+        return;
+      }
+      state.grades.unshift({ id: 'g_' + Date.now(), subject, title, score, total });
+      closeModal('grade-modal');
+      showToast('تم إضافة الدرجة وتحليل الأداء 📊', '✅');
+      saveState();
+    }
+
+    function saveExam() {
+      const subject = document.getElementById('e-subject').value.trim();
+      const date = document.getElementById('e-date').value;
+      if (!subject || !date) return;
+      state.exams.push({ id: 'e_' + Date.now(), subject, date });
+      closeModal('exam-modal');
+      showToast('تمت إضافة الامتحان 📝', '✅');
+      saveState();
+    }
+
+    function deleteExam(id) {
+      state.exams = state.exams.filter(e => e.id !== id);
+      saveState();
+    }
+
+    function saveMistake() {
+      const subject = document.getElementById('m-subject').value;
+      const question = document.getElementById('m-question').value.trim();
+      const reason = document.getElementById('m-reason').value.trim();
+      const solution = document.getElementById('m-solution').value.trim();
+      if (!question || !solution) {
+        showToast('اكتبي السؤال والحل الصحيح', '⚠️');
+        return;
+      }
+      state.mistakes.unshift({ id: 'm_' + Date.now(), subject, question, reason, solution });
+      closeModal('mistake-modal');
+      showToast('تم الحفظ في دفتر الأخطاء 📓', '✅');
+      saveState();
+    }
+
+    function deleteMistake(id) {
+      state.mistakes = state.mistakes.filter(m => m.id !== id);
+      saveState();
+    }
+
+    function renderAnalytics() {
+      const bySubj = {};
+      state.grades.forEach(g => {
+        const pct = (g.score / g.total) * 100;
+        if (!bySubj[g.subject]) bySubj[g.subject] = [];
+        bySubj[g.subject].push(pct);
+      });
+
+      const subjAvgs = Object.keys(bySubj).map(sub => {
+        const avg = Math.round(bySubj[sub].reduce((a, b) => a + b, 0) / bySubj[sub].length);
+        return { subject: sub, avg, count: bySubj[sub].length };
+      }).sort((a, b) => b.avg - a.avg);
+
+      const overall = subjAvgs.length ? Math.round(subjAvgs.reduce((a, b) => a + b.avg, 0) / subjAvgs.length) : 0;
+      document.getElementById('overall-avg-badge').textContent = overall + '%';
+      document.getElementById('weekly-score-val').textContent = (overall || 85) + '%';
+
+      const barsBox = document.getElementById('subjects-bars-list');
+      if (subjAvgs.length === 0) {
+        barsBox.innerHTML = `<div style="color:var(--text-muted); font-size:0.82rem;">سجّلي درجات اختباراتك لعرض التحليل</div>`;
+      } else {
+        barsBox.innerHTML = subjAvgs.map(s => {
+          const color = s.avg >= 85 ? 'var(--mint)' : (s.avg >= 70 ? 'var(--purple-main)' : 'var(--pink)');
+          return `
+            <div style="margin-bottom:10px;">
+              <div style="display:flex; justify-content:space-between; font-size:0.82rem; margin-bottom:4px;">
+                <span><strong>${s.subject}</strong> <span style="color:var(--text-muted); font-size:0.72rem;">(${s.count} اختبار)</span></span>
+                <span style="color:${color}; font-weight:800;">${s.avg}%</span>
+              </div>
+              <div style="height:8px; background:rgba(255,255,255,0.07); border-radius:8px; overflow:hidden;">
+                <div style="height:100%; width:${s.avg}%; background:${color}; border-radius:8px;"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const weak = subjAvgs.filter(s => s.avg < 75);
+      const alertTxt = document.getElementById('weakness-analysis-text');
+      if (weak.length > 0) {
+        const names = weak.map(w => `${w.subject} (${w.avg}%)`).join(' و ');
+        alertTxt.innerHTML = `مادة <strong>${names}</strong> تحتاج إلى مراجعة إضافية وحل أسئلة أكثر لرفع مستواها. ${weak[0].count === 1 ? '(ملاحظة: التقييم مبني على اختبار واحد، أضيفي اختبارات أخرى لدقة أعلى)' : ''}`;
+      } else if (subjAvgs.length > 0) {
+        alertTxt.innerHTML = `مستواكِ ممتاز ومتوازن في جميع المواد المسجلة! استمري بنفس الوتيرة يا دكتورة ملك ♡`;
+      } else {
+        alertTxt.innerHTML = `أضيفي درجات اختباراتك ليقوم النظام باكتشاف نقاط القوة والمواد التي تحتاج إلى دعم.`;
+      }
+
+      const examsBox = document.getElementById('exams-list');
+      const sortedExams = [...state.exams].sort((a, b) => a.date.localeCompare(b.date));
+      examsBox.innerHTML = sortedExams.length ? sortedExams.map(e => {
+        const diff = Math.ceil((new Date(e.date) - new Date(todayISO())) / (1000 * 60 * 60 * 24));
+        const badge = diff < 0 ? 'انتهى' : (diff === 0 ? 'اليوم!' : `باقي ${diff} يوم`);
+        return `
+          <div class="task-item">
+            <div class="task-body">
+              <div class="task-title">${e.subject}</div>
+              <div class="task-meta"><span>📅 ${e.date}</span> • <span style="color:var(--gold);">${badge}</span></div>
+            </div>
+            <button class="mini-action" onclick="deleteExam('${e.id}')">🗑️</button>
+          </div>
+        `;
+      }).join('') : `<div style="font-size:0.8rem; color:var(--text-muted);">لا توجد امتحانات مسجلة</div>`;
+
+      const mistakesBox = document.getElementById('mistakes-list');
+      mistakesBox.innerHTML = state.mistakes.length ? state.mistakes.map(m => `
+        <div class="task-item" style="flex-direction:column; align-items:stretch;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="tag tag-urgent">${m.subject}</span>
+            <button class="mini-action" onclick="deleteMistake('${m.id}')">🗑️</button>
+          </div>
+          <div style="font-size:0.85rem; font-weight:700; margin-top:4px;">❓ ${m.question}</div>
+          ${m.reason ? `<div style="font-size:0.75rem; color:var(--pink);">⚠️ السبب: ${m.reason}</div>` : ''}
+          <div style="font-size:0.78rem; color:var(--mint); margin-top:2px;">✅ الحل: ${m.solution}</div>
+        </div>
+      `).join('') : `<div style="font-size:0.8rem; color:var(--text-muted);">دفتر الأخطاء فارغ حالياً</div>`;
+    }
+
+    // ==================== REWARDS & DREAM TRACKER ====================
+    function saveDream() {
+      state.dream.examDate = document.getElementById('d-date').value;
+      state.dream.letter = document.getElementById('d-letter').value.trim();
+      closeModal('dream-modal');
+      showToast('تم تحديث إعدادات حلمك ♡', '🩺');
+      saveState();
+    }
+
+    function renderRewardsAndDream() {
+      const pts = state.points || 0;
+      document.getElementById('total-points-display').textContent = pts;
+
+      let levelName = 'بداية الرحلة 🌱', nextTarget = 100;
+      if (pts >= 300) { levelName = 'نجمة متألقة ✨'; nextTarget = 500; }
+      else if (pts >= 150) { levelName = 'بطلة مجتهدة 👑'; nextTarget = 300; }
+      else if (pts >= 50) { levelName = 'طالبة نشيطة 🌸'; nextTarget = 150; }
+
+      document.getElementById('user-level-name').textContent = levelName;
+      document.getElementById('level-next-pts').textContent = `${pts} / ${nextTarget} نقطة`;
+      document.getElementById('level-progress-bar').style.width = Math.min(100, (pts / nextTarget) * 100) + '%';
+
+      const targetDate = new Date(state.dream.examDate || '2027-06-15');
+      const diffDays = Math.max(0, Math.ceil((targetDate - new Date()) / (1000 * 60 * 60 * 24)));
+      document.getElementById('dream-days-left').textContent = diffDays;
+      document.getElementById('dream-letter-text').textContent = state.dream.letter;
+
+      const completedTasks = state.tasks.filter(t => t.done).length;
+      const badges = [
+        { icon: '🌟', title: 'أول خطوة', desc: 'إكمال أول مهمة دراسية بنجاح', unlocked: completedTasks >= 1 },
+        { icon: '🔥', title: 'إنجاز 5 مهام', desc: 'إتمام 5 مهام دراسية بنجاح', unlocked: completedTasks >= 5 },
+        { icon: '⏳', title: 'تركيز عميق', desc: 'إكمال 5 جلسات مذاكرة بالبومودورو', unlocked: state.study.length >= 5 },
+        { icon: '💎', title: 'نادي المئة نقطة', desc: 'جمع 100 نقطة من الالتزام والمذاكرة', unlocked: pts >= 100 }
+      ];
+
+      document.getElementById('badges-list').innerHTML = badges.map(b => `
+        <div class="badge-card ${b.unlocked ? 'unlocked' : ''}">
+          <div style="font-size:1.6rem;">${b.unlocked ? b.icon : '🔒'}</div>
+          <div style="flex:1;">
+            <div style="font-weight:700; font-size:0.88rem; color:${b.unlocked ? 'var(--gold)' : 'var(--text-muted)'};">${b.title}</div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">${b.desc}</div>
+          </div>
+          <span style="font-size:0.72rem; color:${b.unlocked ? 'var(--mint)' : 'var(--text-muted)'};">${b.unlocked ? 'مفتوح ✓' : 'مغلق'}</span>
+        </div>
+      `).join('');
+    }
+
+    // ==================== LOCAL SMART AI ASSISTANT ====================
+    function askQuickAI(q) {
+      document.getElementById('ai-input').value = q;
+      sendAIMessage();
+    }
+
+    function sendAIMessage() {
+      const input = document.getElementById('ai-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const chat = document.getElementById('ai-chat-box');
+      chat.innerHTML += `<div class="msg msg-user">${text}</div>`;
+      input.value = '';
+
+      const reply = generateLocalAIResponse(text);
+      setTimeout(() => {
+        chat.innerHTML += `<div class="msg msg-ai">${reply}</div>`;
+        chat.scrollTop = chat.scrollHeight;
+      }, 350);
+    }
+
+    function generateLocalAIResponse(query) {
+      const q = query.toLowerCase();
+      const pendingTasks = state.tasks.filter(t => !t.done);
+      const urgent = pendingTasks.filter(t => t.priority === 'عاجلة');
+      const upcomingLessons = state.lessons.filter(l => l.date === todayISO());
+
+      if (q.includes('أبدأ') || q.includes('خطة') || q.includes('ترتيب') || q.includes('عندي')) {
+        let res = `بناءً على جدولك يا ملك، دي أفضل خطة ليكِ دلوقتي:<br>`;
+        if (urgent.length > 0) {
+          res += `1️⃣ ابدئي فوراً بالمهمة العاجلة: <strong>"${urgent[0].title}"</strong> (${urgent[0].duration} دقيقة).<br>`;
+        } else if (pendingTasks.length > 0) {
+          res += `1️⃣ ابدئي بمهمة: <strong>"${pendingTasks[0].title}"</strong> بجلسة بومودورو 25 دقيقة.<br>`;
+        } else {
+          res += `1️⃣ ما شاء الله مخلصّة مهامك! تقدري تعملي جلسة مراجعة عامة 25 دقيقة.<br>`;
+        }
+        if (upcomingLessons.length > 0) {
+          res += `2️⃣ خلي بالك عندك درس <strong>${upcomingLessons[0].title}</strong> الساعة ${formatTime12(upcomingLessons[0].time)}، جهزي أدواتك قبله بنص ساعة.<br>`;
+        }
+        res += `3️⃣ خدي راحة 5 دقايق واشربي مية بين كل جلسة والتانية ♡`;
+        return res;
+      }
+
+      if (q.includes('مادة') || q.includes('أضعف') || q.includes('درجات') || q.includes('مستوى')) {
+        if (state.grades.length === 0) {
+          return `لسه ما سجلتش درجات اختبارات! روحي لقسم <strong>إحصائيات</strong> وسجلي درجاتك وهقولك فوراً إيه المادة اللي محتاجة تركيز أكثر.`;
+        }
+        const lowest = [...state.grades].sort((a, b) => (a.score / a.total) - (b.score / b.total))[0];
+        const pct = Math.round((lowest.score / lowest.total) * 100);
+        return `حسب درجاتك المسجلة، مادة <strong>${lowest.subject}</strong> (${pct}%) محتاجة اهتمام إضافي الأسبوع ده. أنصحك تخصصي لها جلسة 50 دقيقة لحل أسئلة من دفتر الأخطاء.`;
+      }
+
+      if (q.includes('شجع') || q.includes('تعب') || q.includes('ضغط') || q.includes('حلم')) {
+        return `يا دكتورة ملك ♡ افتكري إن التعب ده مؤقت، لكن فرحة قبولك في <strong>كلية العلاج الطبيعي</strong> هتفضل معاكي العمر كله! خدي نفس عميق، اعملي كوباية مشروب بتحبيه، وابدئي بمهمة واحدة صغيرة بس ✨`;
+      }
+
+      return `فهمتك يا ملك! عندك حالياً <strong>${pendingTasks.length} مهام متبقية</strong> و <strong>${upcomingLessons.length} دروس النهارده</strong>. لو حابة أرتبهم لكِ اضغطي على زر <strong>"أبدأ بإيه النهارده؟"</strong> فوق ♡`;
+    }
+
+    // ==================== BACKUP & RESTORE ====================
+    function exportBackup() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `MALAK_Backup_${todayISO()}.json`;
+      a.click();
+      showToast('تم تحميل ملف النسخة الاحتياطية 📤', '✅');
+    }
+
+    function importBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (imported.tasks && imported.lessons) {
+            state = imported;
+            saveState();
+            showToast('تمت استعادة البيانات بنجاح! 🎉', '📥');
+          } else {
+            showToast('ملف النسخة الاحتياطية غير صالح', '⚠️');
+          }
+        } catch {
+          showToast('حدث خطأ أثناء قراءة الملف', '❌');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function resetAllData() {
+      if (confirm('هل أنتِ متأكدة من مسح جميع البيانات وإعادة التطبيق لحالته الأولى؟')) {
+        localStorage.removeItem(STORAGE_KEY);
+        location.reload();
+      }
+    }
+
+    // ==================== DASHBOARD PROGRESS & MASTER RENDER ====================
+    function renderDashboardStats() {
+      const todayTasks = state.tasks.filter(t => t.date === todayISO());
+      const doneCount = todayTasks.filter(t => t.done).length;
+      const totalCount = todayTasks.length;
+      const pct = totalCount === 0 ? 0 : Math.round((doneCount / totalCount) * 100);
+
+      document.getElementById('dash-pct').textContent = pct + '%';
+      document.getElementById('stat-tasks-done').textContent = `${doneCount}/${totalCount}`;
+      document.getElementById('stat-streak').textContent = `${state.streak || 1} 🔥`;
+
+      const circumference = 238.76;
+      const offset = circumference - (pct / 100) * circumference;
+      document.getElementById('dash-ring-fill').style.strokeDashoffset = offset;
+    }
+
+    function renderAll() {
+      renderDashboardStats();
+      renderTasks();
+      renderLessons();
+      renderPrayers();
+      renderStudy();
+      renderAnalytics();
+      renderRewardsAndDream();
+    }
+  </script>
+</body>
+</html>
